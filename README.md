@@ -1,3 +1,3 @@
-# studio-esa-games-homepage
+# studio-esagames-homepage
 
-Modern homepage for Studio Esagames. Made using the Epilogue template at https://templated.co/epilogue/
+Modern homepage for Studio Esagames. Made with plain HTML+CSS using the Epilogue template at https://templated.co/epilogue/
