@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.studioesagames.alignment_is_hard",
+        "sha256_cert_fingerprints": ["90:8C:AB:4B:9C:DE:00:F0:BC:7F:8B:F9:CA:19:3F:86:7D:F3:F5:42:A7:3F:E9:E0:D5:03:35:6C:ED:82:F2:7D"]
+      }
+    }]
