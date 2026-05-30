@@ -1964,7 +1964,7 @@ ${growLine}</div>`
         if (fx === 'heal') return `Staff, Rank ${w.rank}, Heal ${w.mt}${effectText}`
         if (fx === 'fortify') return `Staff, Rank ${w.rank}, heals all allies by Mag${effectText}`
         if (fx === 'sleep' || fx === 'berserk') return `Staff, Rank ${w.rank}, ${statusName(fx)}, Hit ${w.hit}${effectText}`
-        return `Rank ${w.rank}, Mt ${w.mt}, Hit ${w.hit}, Wt ${w.wt}, Crit ${w.crit}${effectText}`
+        return `Mt ${w.mt}, Hit ${w.hit}, Wt ${w.wt}, Crit ${w.crit}, Rank ${w.rank}${effectText}`
       }
       function isGoodRewardWeapon(w) {
         return w.tier !== 'normal'
@@ -2046,8 +2046,8 @@ ${growLine}</div>`
         const effectiveASSymbol = effectiveAttackSpeed < 0 ? '-' : effectiveAttackSpeed === 0 ? '±' : '+'
         return {
           type: 'item',
-          title: `Equip ${item.name} to ${itemUnit.name} (Con: ${itemUnit.stats.con}, Speed ${effectiveASSymbol}${Math.abs(effectiveAttackSpeed)})`,
-          desc: `Give ${item.name} (${weaponSummary(item)}).${meta}`,
+          title: `${item.name} to ${itemUnit.name} (Con: ${itemUnit.stats.con}, Speed ${effectiveASSymbol}${Math.abs(effectiveAttackSpeed)})`,
+          desc: `Equip ${itemUnit.name} with ${item.name} (${weaponSummary(item)}).${meta}`,
           unit: itemUnit,
           item,
         }
@@ -2124,7 +2124,7 @@ ${growLine}</div>`
         const label = r.stat.toUpperCase()
         const before = u.stats[r.stat]
         const after = Math.min(capStat(u, r.stat), before + r.amt)
-        return `Permanently grants ${label} +${r.amt} to ${u.name} (${before} -> ${after}).`
+        return `Permanently grants ${u.name} ${label} +${r.amt} (${before} -> ${after}).`
       }
       function levelBoostReward() {
         return {
