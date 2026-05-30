@@ -4,604 +4,21 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>GBA Emblem Roguelike Prototype</title>
-    <style>
-      :root {
-        --bg: #111827;
-        --panel: #1f2937;
-        --panel2: #0f172a;
-        --ink: #f8fafc;
-        --muted: #94a3b8;
-        --accent: #fbbf24;
-        --blue: #2563eb;
-        --red: #b91c1c;
-        --green: #16a34a;
-      }
-      * {
-        box-sizing: border-box;
-      }
-      body {
-        margin: 0;
-        background: linear-gradient(180deg, #111827, #020617);
-        font:
-          14px/1.35 system-ui,
-          Segoe UI,
-          Arial;
-        color: var(--ink);
-      }
-      h1,
-      h2,
-      h3 {
-        margin: 0 0 8px;
-      }
-      .wrap {
-        max-width: none;
-        margin: 0;
-        padding: 16px;
-      }
-      .top {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 12px;
-      }
-      .badge {
-        display: inline-flex;
-        gap: 6px;
-        align-items: center;
-        border: 1px solid #334155;
-        border-radius: 999px;
-        padding: 5px 9px;
-        background: #0f172a;
-        color: #cbd5e1;
-        font-size: 12px;
-      }
-      .grid {
-        display: grid;
-        grid-template-columns: minmax(340px, 360px) minmax(520px, 1fr) minmax(340px, 360px);
-        gap: 12px;
-      }
-      .panel {
-        background: rgba(15, 23, 42, 0.92);
-        border: 1px solid #334155;
-        border-radius: 12px;
-        padding: 12px;
-        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.25);
-      }
-      button {
-        border: 1px solid #475569;
-        background: #1e293b;
-        color: #fff;
-        border-radius: 8px;
-        padding: 8px 10px;
-        cursor: pointer;
-        font-weight: 650;
-      }
-      button:hover {
-        background: #334155;
-      }
-      button.primary {
-        background: #92400e;
-        border-color: #f59e0b;
-      }
-      button.primary:hover {
-        background: #b45309;
-      }
-      button.good {
-        background: #166534;
-        border-color: #22c55e;
-      }
-      button.danger {
-        background: #7f1d1d;
-        border-color: #ef4444;
-      }
-      button:disabled {
-        opacity: 0.45;
-        cursor: not-allowed;
-      }
-      .row {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        flex-wrap: wrap;
-      }
-      .space {
-        justify-content: space-between;
-      }
-      .small {
-        font-size: 12px;
-        color: var(--muted);
-      }
-      .muted {
-        color: var(--muted);
-      }
-      .hidden {
-        display: none !important;
-      }
-      .card {
-        border: 1px solid #334155;
-        border-radius: 10px;
-        padding: 9px;
-        background: rgba(30, 41, 59, 0.78);
-        margin: 8px 0;
-      }
-      .unitCard {
-        display: grid;
-        grid-template-columns: 64px 1fr;
-        gap: 9px;
-        align-items: start;
-      }
-      .unitCard > div {
-        min-width: 0;
-      }
-      .unitCard.selected {
-        outline: 2px solid #fbbf24;
-      }
-      .portrait {
-        width: 60px;
-        height: 60px;
-        border: 2px solid #111827;
-        border-radius: 4px;
-        background: #334155;
-        object-fit: cover;
-        object-position: center top;
-        image-rendering: pixelated;
-        box-shadow: 0 0 0 1px #64748b;
-      }
-      .battleSprite {
-        width: 64px;
-        height: 80px;
-        image-rendering: pixelated;
-        filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.25));
-      }
-      .mapSprite {
-        display: inline-flex;
-        overflow: hidden;
-        align-items: flex-start;
-        justify-content: center;
-        vertical-align: top;
-        background: transparent;
-      }
-      .mapSpriteSheet {
-        display: block;
-        width: 64px;
-        height: auto;
-        max-width: none;
-        image-rendering: pixelated;
-        animation: mapSpriteStand 0.9s steps(var(--frames, 1)) infinite;
-        will-change: transform;
-      }
-      @keyframes mapSpriteStand {
-        from {
-          transform: translateY(var(--sprite-offset, 0px));
-        }
-        to {
-          transform: translateY(calc(var(--sprite-offset, 0px) - var(--sprite-distance, 64px)));
-        }
-      }
-      .name {
-        font-weight: 800;
-      }
-      .class {
-        font-size: 12px;
-        color: #cbd5e1;
-      }
-      .hpbar {
-        height: 8px;
-        border-radius: 99px;
-        background: #450a0a;
-        overflow: hidden;
-        border: 1px solid #7f1d1d;
-        margin-top: 3px;
-      }
-      .hpbar > i {
-        display: block;
-        height: 100%;
-        background: linear-gradient(90deg, #16a34a, #84cc16);
-      }
-      .stats {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 3px;
-        margin-top: 5px;
-      }
-      .stats span {
-        background: #111827;
-        border: 1px solid #334155;
-        border-radius: 5px;
-        padding: 2px 4px;
-        font-size: 11px;
-      }
-      .stats b {
-        color: #e2e8f0;
-      }
-      .teamGrid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-      }
-      .draftSlots {
-        display: grid;
-        gap: 12px;
-        margin-top: 10px;
-      }
-      .draftSlot {
-        border-top: 1px solid #334155;
-        padding-top: 10px;
-      }
-      .draftChoices {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 8px;
-      }
-      .draftChoice {
-        width: 100%;
-        min-width: 0;
-        border: 1px solid #334155;
-        border-radius: 10px;
-        padding: 9px;
-        background: rgba(30, 41, 59, 0.78);
-        text-align: left;
-        font-weight: 400;
-      }
-      .draftChoice:hover {
-        border-color: #64748b;
-      }
-      .draftChoice.selected {
-        border-color: #fbbf24;
-        background: rgba(146, 64, 14, 0.34);
-      }
-      .draftChoice .statCompare {
-        white-space: pre-wrap;
-      }
-      .arena {
-        display: grid;
-        grid-template-columns: 1fr 70px 1fr;
-        gap: 8px;
-        align-items: start;
-      }
-      .side h3 {
-        text-align: center;
-      }
-      .spriteRow {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 6px;
-        min-height: 150px;
-      }
-      .combatSlot {
-        min-width: 0;
-      }
-      .combatant {
-        position: relative;
-        text-align: center;
-        border-radius: 8px;
-        padding: 5px;
-        background: rgba(15, 23, 42, 0.8);
-        border: 1px solid #334155;
-        transition:
-          transform 0.3s ease,
-          box-shadow 0.3s ease,
-          border-color 0.3s ease,
-          opacity 0.3s ease;
-      }
-      .combatant.active {
-        transform: translateY(-10px);
-        border-color: #fde68a;
-        box-shadow:
-          0 0 0 2px rgba(251, 191, 36, 0.5),
-          0 12px 24px rgba(0, 0, 0, 0.35);
-      }
-      .combatant.target {
-        transform: translateY(-10px);
-        border-color: #93c5fd;
-        box-shadow:
-          0 0 0 2px rgba(147, 197, 253, 0.45),
-          0 12px 24px rgba(0, 0, 0, 0.35);
-      }
-      .combatant.selectable {
-        cursor: pointer;
-        border-color: #22c55e;
-      }
-      .combatant.selectable:hover {
-        transform: translateY(-10px);
-        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.55);
-      }
-      .combatant.striking {
-        transform: translateY(-10px) scale(1.08);
-      }
-      .combatant .hpText {
-        font-size: 12px;
-        color: #cbd5e1;
-      }
-      .combatant .hpbar {
-        height: 7px;
-        margin: 3px 0 2px;
-      }
-      .combatant .hpbar > i {
-        transition: width 0.3s ease;
-      }
-      .combatPreview {
-        min-height: 36px;
-        margin-top: 8px;
-        font-size: 11px;
-        line-height: 1.2;
-        color: #cbd5e1;
-        text-align: center;
-        white-space: normal;
-      }
-      .combatPreview.empty {
-        visibility: hidden;
-      }
-      .combatPreview .hitAdv {
-        color: #86efac;
-      }
-      .combatPreview .hitDis {
-        color: #fca5a5;
-      }
-      .combatPreview .hitNeu {
-        color: #e2e8f0;
-      }
-      .combatPreview .critLine {
-        color: #e2e8f0;
-      }
-      .bossTag {
-        color: #fde68a;
-        font-weight: 900;
-      }
-      .nextMarker {
-        position: absolute;
-        left: 50%;
-        top: -22px;
-        transform: translateX(-50%);
-        width: 18px;
-        height: 18px;
-        z-index: 3;
-        filter: drop-shadow(0 2px 1px rgba(0, 0, 0, 0.75));
-        animation: nextPulse 0.9s ease-in-out infinite;
-      }
-      .nextMarker svg {
-        display: block;
-        width: 18px;
-        height: 18px;
-      }
-      .nextMarker path {
-        fill: #bae6fd;
-        stroke: #0f172a;
-        stroke-width: 1.5px;
-      }
-      @keyframes nextPulse {
-        0%,
-        100% {
-          transform: translateX(-50%) translateY(0);
-        }
-        50% {
-          transform: translateX(-50%) translateY(3px);
-        }
-      }
-      .floatText {
-        position: absolute;
-        left: 50%;
-        top: 0;
-        transform: translate(-50%, -18px);
-        font-weight: 900;
-        text-shadow: 0 2px 0 #000;
-        animation: floatDamage 0.55s ease forwards;
-        pointer-events: none;
-      }
-      .floatText.damage {
-        color: #fca5a5;
-      }
-      .floatText.healing {
-        color: #86efac;
-      }
-      .floatText.missText {
-        color: #93c5fd;
-      }
-      @keyframes floatDamage {
-        0% {
-          opacity: 0;
-          transform: translate(-50%, 0);
-        }
-        20% {
-          opacity: 1;
-        }
-        100% {
-          opacity: 0;
-          transform: translate(-50%, -32px);
-        }
-      }
-      .dead {
-        opacity: 0.35;
-        filter: grayscale(1);
-      }
-      .versus {
-        font-weight: 900;
-        font-size: 28px;
-        color: #fbbf24;
-        text-align: center;
-        margin-top: 76px;
-      }
-      .log {
-        height: 360px;
-        overflow: auto;
-        background: #020617;
-        border: 1px solid #334155;
-        border-radius: 10px;
-        padding: 8px;
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 12px;
-      }
-      .log p {
-        margin: 0 0 5px;
-      }
-      .hit {
-        color: #fde68a;
-      }
-      .miss {
-        color: #93c5fd;
-      }
-      .crit {
-        color: #fca5a5;
-      }
-      .heal {
-        color: #86efac;
-      }
-      .death {
-        color: #f87171;
-      }
-      .rewardGrid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 8px;
-      }
-      .reward {
-        border: 1px solid #475569;
-        border-radius: 10px;
-        padding: 10px;
-        background: #172033;
-      }
-      .reward h4 {
-        margin: 0 0 5px;
-        color: #fde68a;
-      }
-      .pickList {
-        max-height: 480px;
-        overflow: auto;
-      }
-      .tabs {
-        display: flex;
-        gap: 6px;
-        margin: 8px 0;
-      }
-      .tab.active {
-        background: #475569;
-      }
-      .footer {
-        margin-top: 10px;
-        color: #64748b;
-        font-size: 12px;
-      }
-      .notice {
-        background: rgba(15, 23, 42, 0.72);
-        border: 1px solid #334155;
-        border-radius: 10px;
-        padding: 8px;
-        margin-bottom: 10px;
-        color: #cbd5e1;
-      }
-      .assetNote {
-        font-size: 12px;
-        color: #94a3b8;
-        margin-top: 6px;
-      }
-      .assetNote code {
-        background: #020617;
-        border: 1px solid #334155;
-        border-radius: 4px;
-        padding: 1px 4px;
-        color: #e2e8f0;
-      }
-      .statCompare {
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 11px;
-        line-height: 1.35;
-        color: #cbd5e1;
-        margin-top: 5px;
-        white-space: pre;
-      }
-      .statCompare b {
-        color: #e2e8f0;
-      }
-      .modal {
-        position: fixed;
-        inset: 0;
-        background: rgba(2, 6, 23, 0.72);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10;
-      }
-      .modalBox {
-        width: min(720px, 96vw);
-        max-height: 90vh;
-        overflow: auto;
-        background: #0f172a;
-        border: 1px solid #fbbf24;
-        border-radius: 12px;
-        padding: 14px;
-      }
-      .choice {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: 10px;
-        align-items: center;
-        border: 1px solid #334155;
-        border-radius: 10px;
-        padding: 9px;
-        margin: 8px 0;
-        background: #111827;
-      }
-      .pill {
-        display: inline-block;
-        border-radius: 999px;
-        padding: 1px 6px;
-        background: #334155;
-        color: #e2e8f0;
-        font-size: 11px;
-      }
-      .weaponStats {
-        display: grid;
-        grid-template-columns: repeat(5, auto);
-        gap: 3px;
-        margin-top: 5px;
-      }
-      .weaponStats span {
-        background: #172033;
-        border: 1px solid #334155;
-        border-radius: 5px;
-        padding: 2px 4px;
-        font-size: 11px;
-        color: #cbd5e1;
-      }
-      .weaponStats b {
-        color: #f8fafc;
-      }
-      .kbd {
-        font-family: monospace;
-        background: #020617;
-        border: 1px solid #334155;
-        border-radius: 4px;
-        padding: 1px 4px;
-      }
-      @media (max-width: 1000px) {
-        .grid {
-          grid-template-columns: 1fr;
-        }
-        .arena {
-          grid-template-columns: 1fr;
-        }
-        .versus {
-          margin: 0;
-        }
-        .teamGrid {
-          grid-template-columns: 1fr;
-        }
-        .draftChoices {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <div class="wrap">
       <div class="top">
-        <div>
-          <h1>GBA Emblem Roguelike Prototype</h1>
-          <div class="small">FEMP-compatible asset hooks, FE7-inspired mechanics, richer weapons, animated round-robin arena loop.</div>
+        <div class="topTitle">
+          <h1>FireRogue: Blazing Sword</h1>
         </div>
-        <div class="row">
-          <span class="badge">Battle <b id="battleNo">0</b>/20</span><span class="badge">Roster <b id="rosterCount">0</b>/5</span
+        <div id="biomeMap" class="biomeMap" aria-label="Biome map"></div>
+        <div class="row topBadges">
+          <span class="badge"
+            >Battle <span><span id="battleNo">0</span>/20</span></span
+          ><span class="badge"
+            >Roster <span><span id="rosterCount">0</span>/5</span></span
+          ><span class="badge">Gold <b id="goldLabel" class="goldAmount">0 G</b></span
           ><span class="badge">Seed <b id="seedLabel"></b></span>
         </div>
       </div>
@@ -613,7 +30,7 @@
           battle 1.
         </div>
         <div id="draftList" class="draftSlots"></div>
-        <div class="row space" style="margin-top: 10px">
+        <div class="row space draftActions">
           <div id="draftHint" class="small"></div>
           <div class="row">
             <button id="randomPickBtn">Pick randomly</button><button id="rerollBtn">Reroll offers</button><button id="startBtn" class="primary">Start run</button>
@@ -631,31 +48,32 @@
         </section>
         <main class="panel">
           <div class="row space">
-            <h2>Arena</h2>
-            <div class="row"><span class="badge">Battles auto-start; choose targets on player turns</span></div>
+            <h2 id="mainModeTitle">Arena</h2>
+            <button id="autoFightBtn" class="autoFightToggle" type="button" aria-pressed="false" disabled>Auto-fight: Off</button>
           </div>
-          <div id="combatStatus" class="notice hidden"></div>
-          <div id="arena" class="arena">
-            <div class="side">
-              <h3>Blue</h3>
-              <div id="blueSprites" class="spriteRow"></div>
+          <div id="shopScreen" class="shopScreen hidden"></div>
+          <div id="battleView">
+            <div id="combatStatus" class="notice hidden combatLogTitle"></div>
+            <div id="arena" class="arena">
+              <div class="side">
+                <h3>Blue</h3>
+                <div id="blueSprites" class="spriteRow"></div>
+              </div>
+              <div class="versus">VS</div>
+              <div class="side">
+                <h3>Red</h3>
+                <div id="redSprites" class="spriteRow"></div>
+              </div>
             </div>
-            <div class="versus">VS</div>
-            <div class="side">
-              <h3>Red</h3>
-              <div id="redSprites" class="spriteRow"></div>
-            </div>
+            <div id="consumablePanel" class="consumablePanel"></div>
+            <h3 class="combatLogTitle">Combat log</h3>
+            <div id="log" class="log"></div>
           </div>
-          <h3 style="margin-top: 10px">Combat log</h3>
-          <div id="log" class="log"></div>
         </main>
         <aside class="panel">
           <h2>Enemy team</h2>
           <div id="enemyTeam"></div>
-          <div class="footer">
-            Tip: click a unit card to inspect its exact stats. A battle ends when one team has no living units. Player turns require choosing an enemy target. Defeated slots are
-            skipped; player and enemy rotations advance independently.
-          </div>
+          <div class="footer">A battle ends when one team has no living units.</div>
         </aside>
       </div>
     </div>
@@ -664,8 +82,10 @@
       <div class="modalBox"><div id="modalBody"></div></div>
     </div>
 
+    <script src="./constants.js"></script>
+    <script src="./data.js"></script>
     <script>
-      // Version: 2026-05-30 opening-draft-random-pick.
+      // Version: 2026-05-30 phase-2-consumables.
 
       'use strict'
       // ---------- deterministic-ish utilities ----------
@@ -692,13 +112,6 @@
       }
 
       // ---------- original pixel sprite system ----------
-      const palettes = {
-        blue: ['#1e3a8a', '#2563eb', '#93c5fd', '#f8fafc', '#7c2d12', '#f2c9a0', '#111827'],
-        red: ['#7f1d1d', '#dc2626', '#fecaca', '#f8fafc', '#422006', '#f2c9a0', '#111827'],
-        green: ['#14532d', '#16a34a', '#bbf7d0', '#f8fafc', '#3f2a1d', '#f2c9a0', '#111827'],
-        purple: ['#581c87', '#9333ea', '#e9d5ff', '#f8fafc', '#1f2937', '#f2c9a0', '#111827'],
-        gold: ['#713f12', '#d97706', '#fde68a', '#f8fafc', '#111827', '#f2c9a0', '#111827'],
-      }
       function svgDataUri(kind = 'lord', team = 'blue', promoted = false) {
         const p = palettes[team] || palettes.blue,
           [dark, main, light, white, hair, skin, black] = p
@@ -811,19 +224,6 @@
       // Enemy examples:    ./assets/femp/enemy-portraits/myrm.png, ./assets/femp/enemy-portraits/cavalier_promoted.png
       // Boss examples:     ./assets/femp/boss-portraits/lloyd.png, ./assets/femp/boss-portraits/valter.png
       // Map examples:      ./assets/femp/map/blue/myrm.png, ./assets/femp/map/red/cavalier.png
-      const FEMP_ASSET_ROOT = './assets/femp'
-      const FEMP_IMAGE_EXTS = ['png', 'gif', 'webp']
-      const MAP_SPRITE_SCALE = 4
-      const MAP_SPRITE_SLOT_H = 20 * MAP_SPRITE_SCALE
-      const STAFF_EXHAUST_ROUND_LIMIT = 30
-      const FEMP_NAME_OVERRIDES = {
-        "L'Arachel": 'larachel',
-        Pent: 'pent',
-        Lucius: 'lucius',
-        Canas: 'canas',
-        Niime: 'niime',
-        Athos: 'athos',
-      }
       function assetSlug(s = '') {
         return String(s)
           .toLowerCase()
@@ -869,6 +269,11 @@
       function portraitFileStem(name) {
         return FEMP_NAME_OVERRIDES[name] || assetSlug(name)
       }
+      function customMapSpriteStem(u) {
+        if (u.isEnemy && u.kind === 'lord') return 'lundgren'
+        const label = u.baseName || u.name
+        return CUSTOM_MAP_SPRITE_STEMS[label] || null
+      }
       function battleFileStem(kind) {
         const map = {
           lord: 'lord',
@@ -905,10 +310,12 @@
         const encoded = chain.map(htmlAttr).join('|')
         return `<img class="${cls}" src="${htmlAttr(chain[0])}" alt="${htmlAttr(alt)}" data-chain="${encoded}" data-chain-i="0" onerror="assetFallback(this)">`
       }
-      function assetSheet(cls, primary, fallbacks, fallbackData, alt = '') {
+      function assetSheet(cls, primary, fallbacks, fallbackData, alt = '', opts = {}) {
         const chain = assetChain([primary, ...fallbacks, fallbackData])
         const encoded = chain.map(htmlAttr).join('|')
-        return `<span class="${cls}" style="--frames:1;--sprite-offset:0px;--sprite-distance:64px"><img class="mapSpriteSheet" src="${htmlAttr(chain[0])}" alt="${htmlAttr(alt)}" data-chain="${encoded}" data-chain-i="0" onerror="assetFallback(this)" onload="assetSheetLoaded(this)"></span>`
+        const spriteWidth = opts.spriteWidth || 64,
+          slotHeight = opts.slotHeight || MAP_SPRITE_SLOT_H
+        return `<span class="${cls}" style="--frames:1;--sprite-offset:0px;--sprite-distance:${spriteWidth}px" data-sprite-width="${spriteWidth}" data-sprite-slot-h="${slotHeight}"><img class="mapSpriteSheet" src="${htmlAttr(chain[0])}" alt="${htmlAttr(alt)}" data-chain="${encoded}" data-chain-i="0" onerror="assetFallback(this)" onload="assetSheetLoaded(this)"></span>`
       }
       function assetFallback(img) {
         const chain = (img.dataset.chain || '').split('|')
@@ -923,12 +330,14 @@
       function assetSheetLoaded(img) {
         const wrap = img.closest('.mapSprite')
         if (!wrap || !img.naturalWidth || !img.naturalHeight) return
+        const spriteWidth = Number(wrap.dataset.spriteWidth || 64),
+          slotHeight = Number(wrap.dataset.spriteSlotH || MAP_SPRITE_SLOT_H)
         const ratio = img.naturalHeight / img.naturalWidth
         const frames = Math.max(1, ratio >= 3 ? 3 : Math.round(ratio))
         const frameH = img.naturalHeight / frames
-        const scale = 64 / img.naturalWidth
+        const scale = spriteWidth / img.naturalWidth
         const frameDisplayH = frameH * scale
-        const offset = MAP_SPRITE_SLOT_H - frameDisplayH
+        const offset = slotHeight - frameDisplayH
         wrap.style.setProperty('--frames', String(frames))
         wrap.style.setProperty('--sprite-offset', `${offset}px`)
         wrap.style.setProperty('--sprite-distance', `${frames * frameDisplayH}px`)
@@ -954,278 +363,46 @@
         const stem = battleFileStem(u.kind)
         const promotedStem = u.promoted ? `${stem}_promoted` : stem
         const teamFolder = u.team === 'red' ? 'map/red' : 'map/blue'
-        const paths = [
-          ...assetPathVariants(teamFolder, promotedStem),
-          ...assetPathVariants(teamFolder, stem),
-          ...assetPathVariants('map/blue', promotedStem),
-          ...assetPathVariants('map/blue', stem),
-          ...assetPathVariants('battle', promotedStem),
-          ...assetPathVariants('battle', stem),
-        ]
+        const customStem = customMapSpriteStem(u)
+        const enemyLord = u.isEnemy && u.kind === 'lord'
+        const customPromotedStem = customStem && u.promoted && !enemyLord ? `${customStem}_promoted` : null
+        const paths =
+          enemyLord && customStem
+            ? [...assetPathVariants(teamFolder, customStem), ...assetPathVariants('map/blue', customStem)]
+            : [
+                ...(customPromotedStem ? assetPathVariants(teamFolder, customPromotedStem) : []),
+                ...(customStem ? assetPathVariants(teamFolder, customStem) : []),
+                ...assetPathVariants(teamFolder, promotedStem),
+                ...assetPathVariants(teamFolder, stem),
+                ...(customPromotedStem ? assetPathVariants('map/blue', customPromotedStem) : []),
+                ...(customStem ? assetPathVariants('map/blue', customStem) : []),
+                ...assetPathVariants('map/blue', promotedStem),
+                ...assetPathVariants('map/blue', stem),
+                ...assetPathVariants('battle', promotedStem),
+                ...assetPathVariants('battle', stem),
+              ]
         return assetSheet('battleSprite mapSprite', paths[0], paths.slice(1), fallbackBattle(u.kind, u.team, u.promoted), u.displayCls || u.cls || u.kind)
       }
-
-      // ---------- game data: close FE7 starting archetypes, compact roster ----------
-      // prettier-ignore
-      const CLASSES = {
-        Lord: {
-          promotesTo: 'Blade Lord',
-          kind: 'lord',
-          caps: { hp: 60, str: 27, skl: 29, spd: 30, lck: 30, def: 22, res: 22, con: 20 },
-          promo: { hp: 4, str: 2, skl: 2, spd: 1, def: 3, res: 3, con: 1 },
-        },
-        Mercenary: {
-          promotesTo: 'Hero',
-          kind: 'merc',
-          caps: { hp: 60, str: 25, skl: 30, spd: 26, lck: 30, def: 25, res: 22, con: 20 },
-          promo: { hp: 4, str: 2, skl: 1, spd: 1, def: 2, res: 2, con: 1 },
-        },
-        Myrmidon: {
-          promotesTo: 'Swordmaster',
-          kind: 'myrm',
-          caps: { hp: 60, str: 24, skl: 29, spd: 30, lck: 30, def: 22, res: 23, con: 20 },
-          promo: { hp: 4, str: 2, skl: 2, spd: 1, def: 2, res: 2, con: 1 },
-        },
-        Thief: {
-          promotesTo: 'Assassin',
-          kind: 'thief',
-          caps: { hp: 60, str: 20, skl: 30, spd: 30, lck: 30, def: 20, res: 20, con: 20 },
-          promo: { hp: 3, str: 1, skl: 2, spd: 1, def: 2, res: 2, con: 1 },
-        },
-        Knight: {
-          promotesTo: 'General',
-          kind: 'knight',
-          caps: { hp: 60, str: 27, skl: 25, spd: 24, lck: 30, def: 30, res: 25, con: 20 },
-          promo: { hp: 4, str: 2, skl: 2, spd: 2, def: 4, res: 3, con: 2 },
-        },
-        Cavalier: {
-          promotesTo: 'Paladin',
-          kind: 'cavalier',
-          caps: { hp: 60, str: 25, skl: 26, spd: 24, lck: 30, def: 25, res: 25, con: 20 },
-          promo: { hp: 3, str: 2, skl: 1, spd: 1, def: 2, res: 3, con: 1 },
-        },
-        Pegasus: {
-          promotesTo: 'Falcon Knight',
-          kind: 'pegasus',
-          caps: { hp: 60, str: 23, skl: 25, spd: 28, lck: 30, def: 22, res: 26, con: 20 },
-          promo: { hp: 4, str: 2, skl: 2, spd: 2, def: 2, res: 2, con: 1 },
-        },
-        Fighter: {
-          promotesTo: 'Warrior',
-          kind: 'fighter',
-          caps: { hp: 60, str: 30, skl: 28, spd: 26, lck: 30, def: 26, res: 22, con: 20 },
-          promo: { hp: 3, str: 1, skl: 2, spd: 2, def: 3, res: 3, con: 1 },
-        },
-        Archer: {
-          promotesTo: 'Sniper',
-          kind: 'archer',
-          caps: { hp: 60, str: 25, skl: 30, spd: 28, lck: 30, def: 25, res: 23, con: 20 },
-          promo: { hp: 3, str: 1, skl: 2, spd: 2, def: 2, res: 2, con: 1 },
-        },
-        Mage: {
-          promotesTo: 'Sage',
-          kind: 'mage',
-          caps: { hp: 60, str: 28, skl: 30, spd: 26, lck: 30, def: 21, res: 25, con: 20 },
-          promo: { hp: 3, str: 1, skl: 1, spd: 1, def: 3, res: 3, con: 1 },
-        },
-        Monk: {
-          promotesTo: 'Sage',
-          kind: 'monk',
-          caps: { hp: 60, str: 28, skl: 30, spd: 26, lck: 30, def: 21, res: 25, con: 20 },
-          promo: { hp: 3, str: 1, skl: 1, spd: 1, def: 3, res: 3, con: 1 },
-        },
-        Cleric: {
-          promotesTo: 'Bishop',
-          kind: 'cleric',
-          caps: { hp: 60, str: 25, skl: 26, spd: 24, lck: 30, def: 21, res: 30, con: 20 },
-          promo: { hp: 3, str: 2, skl: 1, spd: 1, def: 2, res: 3, con: 1 },
-        },
-        Shaman: {
-          promotesTo: 'Druid',
-          kind: 'shaman',
-          caps: { hp: 60, str: 29, skl: 26, spd: 26, lck: 30, def: 21, res: 28, con: 20 },
-          promo: { hp: 4, str: 1, skl: 1, spd: 2, def: 2, res: 2, con: 1 },
-        },
-        Wyvern: {
-          promotesTo: 'Wyvern Lord',
-          kind: 'wyvern',
-          caps: { hp: 60, str: 27, skl: 25, spd: 23, lck: 30, def: 28, res: 22, con: 20 },
-          promo: { hp: 3, str: 2, skl: 2, spd: 2, def: 3, res: 1, con: 1 },
-        },
+      function mapSpriteForFocus(focus, team = 'red', promoted = false) {
+        const kind = CLASSES[focus.cls]?.kind || 'lord'
+        const stem = battleFileStem(kind)
+        const promotedStem = promoted ? `${stem}_promoted` : stem
+        const teamFolder = team === 'red' ? 'map/red' : 'map/blue'
+        const customStem = team === 'red' && kind === 'lord' ? 'lundgren' : null
+        const customPromotedStem = customStem && promoted ? `${customStem}_promoted` : null
+        const paths = customStem
+          ? [
+              ...(customPromotedStem ? assetPathVariants(teamFolder, customPromotedStem) : []),
+              ...assetPathVariants(teamFolder, customStem),
+              ...(customPromotedStem ? assetPathVariants('map/blue', customPromotedStem) : []),
+              ...assetPathVariants('map/blue', customStem),
+            ]
+          : [...assetPathVariants(teamFolder, promotedStem), ...assetPathVariants(teamFolder, stem), ...assetPathVariants('map/blue', promotedStem), ...assetPathVariants('map/blue', stem), ...assetPathVariants('battle', promotedStem), ...assetPathVariants('battle', stem)]
+        return assetSheet('biomeUnitIcon mapSprite', paths[0], paths.slice(1), fallbackBattle(kind, team, promoted), focusLabel(focus), { spriteWidth: 18, slotHeight: 22 })
       }
-      // prettier-ignore
-      const CLASS_TAGS = {
-        Lord: [],
-        'Blade Lord': [],
-        Mercenary: [],
-        Hero: [],
-        Myrmidon: [],
-        Swordmaster: [],
-        Thief: [],
-        Assassin: [],
-        Knight: ['armored'],
-        General: ['armored'],
-        Cavalier: ['mounted'],
-        Paladin: ['mounted'],
-        Pegasus: ['flying'],
-        'Falcon Knight': ['flying'],
-        Wyvern: ['flying', 'dragon'],
-        'Wyvern Lord': ['flying', 'dragon'],
-        Fighter: [],
-        Warrior: [],
-        Archer: [],
-        Sniper: [],
-        Mage: [],
-        Monk: [],
-        Sage: [],
-        Cleric: [],
-        Bishop: [],
-        Shaman: [],
-        Druid: [],
-      }
-      // prettier-ignore
-      const WEAPONS = [
-        { name: 'Iron Sword', type: 'sword', mt: 5, hit: 90, wt: 5, crit: 0, magic: false },
-        { name: 'Slim Sword', type: 'sword', mt: 3, hit: 100, wt: 2, crit: 5, magic: false },
-        { name: 'Steel Sword', type: 'sword', mt: 8, hit: 75, wt: 10, crit: 0, magic: false },
-        { name: 'Iron Blade', type: 'sword', mt: 9, hit: 70, wt: 12, crit: 0, magic: false },
-        { name: 'Armourslayer', type: 'sword', mt: 8, hit: 80, wt: 11, crit: 0, magic: false, effective: ['armored'] },
-        { name: 'Longsword', type: 'sword', mt: 6, hit: 85, wt: 11, crit: 0, magic: false, effective: ['mounted'] },
-        { name: 'Killing Edge', type: 'sword', mt: 9, hit: 75, wt: 7, crit: 30, magic: false },
-        { name: 'Lancereaver', type: 'sword', mt: 9, hit: 75, wt: 9, crit: 5, magic: false, reaver: true },
-        { name: 'Brave Sword', type: 'sword', mt: 9, hit: 75, wt: 12, crit: 0, magic: false, brave: true },
-        { name: 'Silver Sword', type: 'sword', mt: 13, hit: 80, wt: 8, crit: 0, magic: false },
-        { name: 'Regal Blade', type: 'sword', mt: 20, hit: 85, wt: 9, crit: 0, magic: false },
 
-        { name: 'Iron Lance', type: 'lance', mt: 7, hit: 80, wt: 8, crit: 0, magic: false },
-        { name: 'Slim Lance', type: 'lance', mt: 4, hit: 85, wt: 4, crit: 5, magic: false },
-        { name: 'Steel Lance', type: 'lance', mt: 10, hit: 70, wt: 13, crit: 0, magic: false },
-        { name: 'Heavy Spear', type: 'lance', mt: 9, hit: 70, wt: 14, crit: 0, magic: false, effective: ['armored'] },
-        { name: 'Horseslayer', type: 'lance', mt: 7, hit: 75, wt: 13, crit: 0, magic: false, effective: ['mounted'] },
-        { name: 'Killer Lance', type: 'lance', mt: 10, hit: 70, wt: 9, crit: 30, magic: false },
-        { name: 'Axereaver', type: 'lance', mt: 10, hit: 70, wt: 11, crit: 5, magic: false, reaver: true },
-        { name: 'Brave Lance', type: 'lance', mt: 10, hit: 70, wt: 14, crit: 0, magic: false, brave: true },
-        { name: 'Silver Lance', type: 'lance', mt: 14, hit: 75, wt: 10, crit: 0, magic: false },
+      // ---------- unit setup and progression ----------
 
-        { name: 'Iron Axe', type: 'axe', mt: 8, hit: 75, wt: 10, crit: 0, magic: false },
-        { name: 'Steel Axe', type: 'axe', mt: 11, hit: 65, wt: 15, crit: 0, magic: false },
-        { name: 'Hand Axe', type: 'axe', mt: 7, hit: 60, wt: 12, crit: 0, magic: false },
-        { name: 'Hammer', type: 'axe', mt: 10, hit: 55, wt: 15, crit: 0, magic: false, effective: ['armored'] },
-        { name: 'Halberd', type: 'axe', mt: 10, hit: 60, wt: 15, crit: 0, magic: false, effective: ['mounted'] },
-        { name: 'Longaxe', type: 'axe', mt: 8, hit: 65, wt: 13, crit: 0, magic: false, effective: ['mounted'] },
-        { name: 'Killer Axe', type: 'axe', mt: 11, hit: 65, wt: 11, crit: 30, magic: false },
-        { name: 'Swordreaver', type: 'axe', mt: 11, hit: 65, wt: 13, crit: 5, magic: false, reaver: true },
-        { name: 'Swordslayer', type: 'axe', mt: 11, hit: 80, wt: 13, crit: 5, magic: false, reaver: true, effective: ['swordUser'] },
-        { name: 'Brave Axe', type: 'axe', mt: 10, hit: 65, wt: 16, crit: 0, magic: false, brave: true },
-        { name: 'Silver Axe', type: 'axe', mt: 15, hit: 70, wt: 12, crit: 0, magic: false },
-
-        { name: 'Iron Bow', type: 'bow', mt: 6, hit: 85, wt: 5, crit: 0, magic: false, effective: ['flying'] },
-        { name: 'Steel Bow', type: 'bow', mt: 9, hit: 70, wt: 9, crit: 0, magic: false, effective: ['flying'] },
-        { name: 'Short Bow', type: 'bow', mt: 5, hit: 85, wt: 3, crit: 10, magic: false, effective: ['flying'] },
-        { name: 'Killer Bow', type: 'bow', mt: 9, hit: 75, wt: 7, crit: 30, magic: false, effective: ['flying'] },
-        { name: 'Brave Bow', type: 'bow', mt: 10, hit: 70, wt: 12, crit: 0, magic: false, brave: true, effective: ['flying'] },
-        { name: 'Silver Bow', type: 'bow', mt: 13, hit: 75, wt: 6, crit: 0, magic: false, effective: ['flying'] },
-
-        { name: 'Fire', type: 'anima', mt: 5, hit: 90, wt: 4, crit: 0, magic: true },
-        { name: 'Thunder', type: 'anima', mt: 8, hit: 80, wt: 6, crit: 5, magic: true },
-        { name: 'Elfire', type: 'anima', mt: 10, hit: 85, wt: 10, crit: 0, magic: true },
-        { name: 'Fimbulvetr', type: 'anima', mt: 12, hit: 80, wt: 12, crit: 0, magic: true },
-        { name: 'Excalibur', type: 'anima', mt: 18, hit: 90, wt: 13, crit: 10, magic: true, effective: ['flying'] },
-        { name: 'Lightning', type: 'light', mt: 4, hit: 95, wt: 6, crit: 5, magic: true },
-        { name: 'Shine', type: 'light', mt: 6, hit: 90, wt: 8, crit: 8, magic: true },
-        { name: 'Divine', type: 'light', mt: 8, hit: 85, wt: 12, crit: 10, magic: true },
-        { name: 'Aura', type: 'light', mt: 12, hit: 80, wt: 15, crit: 15, magic: true },
-        { name: 'Aureola', type: 'light', mt: 18, hit: 85, wt: 14, crit: 5, magic: true },
-        { name: 'Flux', type: 'dark', mt: 7, hit: 80, wt: 8, crit: 0, magic: true },
-        { name: 'Luna', type: 'dark', mt: 0, hit: 95, wt: 12, crit: 20, magic: true, pierceRes: true },
-        { name: 'Nosferatu', type: 'dark', mt: 10, hit: 70, wt: 14, crit: 0, magic: true, drain: true },
-        { name: 'Fenrir', type: 'dark', mt: 15, hit: 70, wt: 18, crit: 0, magic: true },
-        { name: 'Ereshkigal', type: 'dark', mt: 20, hit: 95, wt: 12, crit: 0, magic: true },
-        { name: 'Heal Staff', type: 'staff', mt: 10, hit: 100, wt: 0, crit: 0, staff: true, magic: true, effect: 'heal' },
-        { name: 'Mend Staff', type: 'staff', mt: 20, hit: 100, wt: 0, crit: 0, staff: true, magic: true, effect: 'heal' },
-        { name: 'Sleep Staff', type: 'staff', mt: 0, hit: 65, wt: 0, crit: 0, staff: true, magic: true, effect: 'sleep' },
-        { name: 'Berserk Staff', type: 'staff', mt: 0, hit: 55, wt: 0, crit: 0, staff: true, magic: true, effect: 'berserk' },
-        { name: 'Fortify Staff', type: 'staff', mt: 0, hit: 100, wt: 0, crit: 0, staff: true, magic: true, effect: 'fortify' },
-      ]
-      // prettier-ignore
-      const BASES = [
-        // FE7-inspired roster pool. Stats/growths are close enough for prototype balance, not exact ROM data.
-U('Lyn','Lord','sword',         {bTotal:27,hp:16,str:4,skl:7,spd:9,lck:5,def:2,res:0,con:5},    {hp:70,str:40,skl:60,spd:60,lck:55,def:20,res:30,gTotal:335},'blue'),
-U('Eliwood','Lord','sword',     {bTotal:29,hp:18,str:5,skl:5,spd:7,lck:7,def:5,res:0,con:7},    {hp:80,str:45,skl:50,spd:40,lck:45,def:30,res:35,gTotal:325},'red'),
-U('Hector','Lord','axe',        {bTotal:27,hp:19,str:7,skl:4,spd:5,lck:3,def:8,res:0,con:13},   {hp:90,str:60,skl:45,spd:35,lck:30,def:50,res:25,gTotal:335},'green'),
-
-U('Raven','Mercenary','sword',  {bTotal:40,hp:25,str:8,skl:11,spd:13,lck:2,def:5,res:1,con:8},  {hp:85,str:55,skl:40,spd:45,lck:35,def:25,res:15,gTotal:300},'purple'),
-U('Harken','Mercenary','sword', {bTotal:41,hp:24,str:9,skl:9,spd:10,lck:4,def:7,res:2,con:11},  {hp:80,str:45,skl:45,spd:35,lck:35,def:30,res:25,gTotal:295},'blue'),
-
-U('Guy','Myrmidon','sword',     {bTotal:38,hp:21,str:6,skl:11,spd:11,lck:5,def:5,res:0,con:5},  {hp:75,str:30,skl:50,spd:70,lck:45,def:15,res:25,gTotal:310},'gold'),
-U('Karel','Myrmidon','sword',   {bTotal:43,hp:22,str:7,skl:12,spd:13,lck:6,def:4,res:1,con:7},  {hp:70,str:35,skl:55,spd:55,lck:30,def:15,res:20,gTotal:280},'red'),
-U('Karla','Myrmidon','sword',   {bTotal:46,hp:20,str:7,skl:12,spd:12,lck:8,def:4,res:3,con:7},  {hp:60,str:25,skl:45,spd:55,lck:40,def:10,res:20,gTotal:255},'blue',2),
-
-U('Matthew','Thief','sword',    {bTotal:26,hp:18,str:4,skl:6,spd:10,lck:3,def:3,res:0,con:7},   {hp:75,str:30,skl:40,spd:70,lck:50,def:25,res:20,gTotal:310},'green'),
-U('Legault','Thief','sword',    {bTotal:38,hp:20,str:6,skl:8,spd:11,lck:6,def:5,res:2,con:9},   {hp:60,str:25,skl:45,spd:60,lck:60,def:25,res:25,gTotal:300},'purple',2),
-U('Jaffar','Thief','sword',     {bTotal:46,hp:21,str:8,skl:12,spd:12,lck:5,def:6,res:3,con:8},  {hp:65,str:20,skl:45,spd:35,lck:15,def:20,res:20,gTotal:220},'red',4),
-
-U('Oswin','Knight','lance',     {bTotal:46,hp:28,str:13,skl:9,spd:5,lck:3,def:13,res:3,con:14}, {hp:90,str:40,skl:30,spd:30,lck:35,def:55,res:30,gTotal:310},'blue'),
-U('Wallace','Knight','lance',   {bTotal:41,hp:28,str:10,skl:6,spd:5,lck:6,def:12,res:2,con:13}, {hp:70,str:45,skl:35,spd:20,lck:30,def:35,res:35,gTotal:270},'blue',4),
-U('Amelia','Knight','lance',    {bTotal:29,hp:18,str:5,skl:4,spd:4,lck:6,def:7,res:3,con:9},    {hp:60,str:40,skl:45,spd:40,lck:50,def:30,res:15,gTotal:280},'red'),
-
-U('Sain','Cavalier','lance',    {bTotal:28,hp:20,str:8,skl:4,spd:6,lck:4,def:6,res:0,con:9},    {hp:80,str:60,skl:35,spd:40,lck:35,def:20,res:20,gTotal:290},'green'),
-U('Kent','Cavalier','sword',    {bTotal:27,hp:20,str:6,skl:6,spd:7,lck:2,def:5,res:1,con:9},    {hp:85,str:40,skl:50,spd:45,lck:20,def:25,res:25,gTotal:290},'red'),
-U('Lowen','Cavalier','lance',   {bTotal:29,hp:23,str:7,skl:5,spd:7,lck:3,def:7,res:0,con:10},   {hp:90,str:30,skl:30,spd:30,lck:50,def:40,res:30,gTotal:300},'green'),
-U('Marcus','Cavalier','lance',  {bTotal:43,hp:25,str:8,skl:8,spd:7,lck:5,def:9,res:6,con:11},   {hp:65,str:30,skl:50,spd:25,lck:30,def:15,res:35,gTotal:250},'gold',4),
-U('Isadora','Cavalier','sword', {bTotal:43,hp:21,str:7,skl:8,spd:10,lck:6,def:6,res:6,con:6},   {hp:75,str:30,skl:35,spd:50,lck:45,def:20,res:25,gTotal:280},'red',2),
-
-U('Florina','Pegasus','lance',  {bTotal:36,hp:17,str:5,skl:7,spd:9,lck:7,def:4,res:4,con:4},    {hp:60,str:40,skl:50,spd:55,lck:50,def:15,res:35,gTotal:305},'blue'),
-U('Fiora','Pegasus','lance',    {bTotal:40,hp:19,str:6,skl:8,spd:10,lck:6,def:5,res:5,con:5},   {hp:70,str:35,skl:60,spd:50,lck:30,def:20,res:50,gTotal:315},'purple'),
-U('Farina','Pegasus','lance',   {bTotal:41,hp:18,str:7,skl:8,spd:9,lck:7,def:5,res:5,con:5},    {hp:75,str:50,skl:45,spd:45,lck:45,def:25,res:30,gTotal:315},'green'),
-
-U('Heath','Wyvern','lance',     {bTotal:40,hp:24,str:10,skl:7,spd:7,lck:7,def:8,res:1,con:9},   {hp:80,str:50,skl:50,spd:45,lck:20,def:30,res:20,gTotal:295},'red'),
-U('Vaida','Wyvern','lance',     {bTotal:43,hp:27,str:11,skl:8,spd:8,lck:4,def:10,res:2,con:12}, {hp:80,str:45,skl:35,spd:30,lck:25,def:25,res:15,gTotal:255},'purple',2),
-U('Haar','Wyvern','axe',        {bTotal:42,hp:28,str:12,skl:9,spd:6,lck:3,def:10,res:2,con:13}, {hp:80,str:45,skl:45,spd:35,lck:15,def:35,res:10,gTotal:265},'gold',2),
-
-U('Dorcas','Fighter','axe',     {bTotal:26,hp:30,str:7,skl:7,spd:6,lck:3,def:3,res:0,con:14},   {hp:80,str:60,skl:40,spd:20,lck:45,def:25,res:15,gTotal:285},'gold'),
-U('Bartre','Fighter','axe',     {bTotal:25,hp:29,str:9,skl:5,spd:3,lck:4,def:4,res:0,con:13},   {hp:85,str:50,skl:35,spd:40,lck:30,def:30,res:25,gTotal:295},'red'),
-U('Geitz','Fighter','axe',      {bTotal:38,hp:27,str:10,skl:8,spd:8,lck:5,def:6,res:1,con:13},  {hp:85,str:50,skl:40,spd:40,lck:40,def:20,res:20,gTotal:295},'green'),
-U('Garcia','Fighter','axe',     {bTotal:29,hp:28,str:8,skl:7,spd:6,lck:3,def:5,res:0,con:13},   {hp:80,str:65,skl:40,spd:30,lck:40,def:25,res:15,gTotal:295},'gold'),
-U('Ross','Fighter','axe',       {bTotal:28,hp:22,str:6,skl:4,spd:5,lck:8,def:4,res:1,con:8},    {hp:70,str:50,skl:35,spd:30,lck:40,def:25,res:20,gTotal:270},'blue'),
-U('Dart','Fighter','axe',       {bTotal:31,hp:25,str:8,skl:5,spd:8,lck:3,def:6,res:1,con:10},   {hp:70,str:65,skl:20,spd:60,lck:35,def:20,res:15,gTotal:285},'red'),
-U('Hawkeye','Fighter','axe',    {bTotal:42,hp:28,str:10,skl:8,spd:6,lck:7,def:8,res:3,con:16},  {hp:50,str:40,skl:30,spd:25,lck:40,def:20,res:35,gTotal:240},'gold',4),
-
-U('Rebecca','Archer','bow',     {bTotal:23,hp:17,str:4,skl:5,spd:6,lck:4,def:3,res:1,con:5},    {hp:60,str:40,skl:50,spd:60,lck:50,def:15,res:30,gTotal:305},'green'),
-U('Wil','Archer','bow',         {bTotal:27,hp:20,str:6,skl:5,spd:5,lck:6,def:5,res:0,con:6},    {hp:75,str:50,skl:50,spd:40,lck:40,def:20,res:25,gTotal:300},'blue'),
-U('Louise','Archer','bow',      {bTotal:40,hp:19,str:7,skl:9,spd:9,lck:7,def:4,res:4,con:6},    {hp:60,str:35,skl:45,spd:40,lck:55,def:20,res:30,gTotal:285},'purple'),
-U('Neimi','Archer','bow',       {bTotal:27,hp:17,str:4,skl:6,spd:7,lck:5,def:3,res:2,con:5},    {hp:55,str:45,skl:50,spd:60,lck:50,def:15,res:35,gTotal:310},'red'),
-U('Innes','Archer','bow',       {bTotal:42,hp:21,str:8,skl:10,spd:10,lck:6,def:5,res:3,con:7},  {hp:75,str:40,skl:45,spd:45,lck:45,def:20,res:25,gTotal:295},'gold'),
-U('Rath','Archer','bow',        {bTotal:34,hp:22,str:7,skl:7,spd:8,lck:5,def:5,res:2,con:7},    {hp:80,str:50,skl:40,spd:50,lck:30,def:25,res:25,gTotal:300},'blue'),
-
-U('Erk','Mage','anima',         {bTotal:27,hp:17,str:5,skl:6,spd:7,lck:3,def:2,res:4,con:5},    {hp:65,str:40,skl:40,spd:50,lck:30,def:20,res:40,gTotal:285},'purple'),
-U('Nino','Mage','anima',        {bTotal:30,hp:15,str:3,skl:4,spd:8,lck:8,def:2,res:5,con:3},    {hp:55,str:50,skl:55,spd:60,lck:45,def:15,res:50,gTotal:330},'green'),
-U('Pent','Mage','anima',        {bTotal:45,hp:22,str:8,skl:9,spd:10,lck:7,def:4,res:7,con:7},   {hp:70,str:35,skl:40,spd:40,lck:40,def:30,res:45,gTotal:300},'blue'),
-U('Lute','Mage','anima',        {bTotal:35,hp:17,str:6,skl:6,spd:7,lck:8,def:3,res:5,con:3},    {hp:45,str:65,skl:30,spd:45,lck:45,def:15,res:40,gTotal:285},'purple'),
-U('Saleh','Mage','anima',       {bTotal:40,hp:23,str:8,skl:8,spd:8,lck:5,def:5,res:6,con:8},    {hp:70,str:40,skl:40,spd:40,lck:30,def:25,res:45,gTotal:290},'gold'),
-U('Athos','Mage','anima',       {bTotal:49,hp:24,str:10,skl:10,spd:8,lck:5,def:6,res:10,con:9}, {hp:40,str:30,skl:30,spd:20,lck:25,def:20,res:40,gTotal:205},'gold',4),
-
-U('Lucius','Monk','light',      {bTotal:32,hp:18,str:7,skl:6,spd:10,lck:2,def:1,res:6,con:6},   {hp:55,str:60,skl:50,spd:40,lck:20,def:10,res:60,gTotal:295},'blue'),
-U('Renault','Monk','light',     {bTotal:38,hp:22,str:7,skl:8,spd:7,lck:4,def:5,res:7,con:9},    {hp:60,str:40,skl:40,spd:35,lck:30,def:25,res:45,gTotal:275},'red'),
-U('Artur','Monk','light',       {bTotal:30,hp:19,str:6,skl:6,spd:8,lck:2,def:2,res:6,con:6},    {hp:55,str:50,skl:50,spd:40,lck:25,def:15,res:55,gTotal:290},'gold'),
-U('Riev','Monk','light',        {bTotal:36,hp:21,str:8,skl:7,spd:6,lck:3,def:4,res:8,con:8},    {hp:65,str:45,skl:35,spd:30,lck:20,def:25,res:60,gTotal:280},'purple'),
-U('Saul','Monk','light',        {bTotal:28,hp:20,str:5,skl:6,spd:7,lck:2,def:2,res:6,con:6},    {hp:60,str:40,skl:45,spd:45,lck:15,def:15,res:50,gTotal:270},'green'),
-
-U('Canas','Shaman','dark',      {bTotal:47,hp:21,str:10,skl:9,spd:8,lck:7,def:5,res:8,con:7},   {hp:70,str:45,skl:40,spd:35,lck:25,def:25,res:45,gTotal:285},'purple'),
-U('Knoll','Shaman','dark',      {bTotal:28,hp:18,str:7,skl:6,spd:6,lck:0,def:2,res:7,con:7},    {hp:70,str:50,skl:40,spd:35,lck:20,def:10,res:45,gTotal:270},'blue'),
-U('Ewan','Shaman','dark',       {bTotal:21,hp:15,str:3,skl:4,spd:5,lck:5,def:1,res:3,con:5},    {hp:50,str:50,skl:45,spd:40,lck:50,def:10,res:40,gTotal:285},'red'),
-U('Lyon','Shaman','dark',       {bTotal:35,hp:20,str:8,skl:7,spd:5,lck:3,def:4,res:8,con:8},    {hp:70,str:55,skl:45,spd:25,lck:25,def:25,res:55,gTotal:300},'purple'),
-U('Niime','Shaman','dark',      {bTotal:42,hp:20,str:9,skl:9,spd:7,lck:3,def:4,res:10,con:6},   {hp:55,str:30,skl:45,spd:25,lck:15,def:15,res:45,gTotal:230},'purple',4),
-
-U('Serra','Cleric','staff',     {bTotal:28,hp:17,str:2,skl:5,spd:8,lck:6,def:2,res:5,con:4},    {hp:50,str:50,skl:30,spd:40,lck:60,def:15,res:55,gTotal:300},'gold'),
-U('Priscilla','Cleric','staff', {bTotal:33,hp:16,str:3,skl:6,spd:8,lck:7,def:3,res:6,con:4},    {hp:45,str:40,skl:50,spd:40,lck:65,def:15,res:50,gTotal:305},'red'),
-U('Moulder','Cleric','staff',   {bTotal:27,hp:20,str:4,skl:6,spd:6,lck:2,def:4,res:5,con:9},    {hp:70,str:40,skl:50,spd:40,lck:20,def:25,res:25,gTotal:270},'blue'),
-U('Natasha','Cleric','staff',   {bTotal:27,hp:18,str:2,skl:4,spd:7,lck:6,def:2,res:6,con:4},    {hp:50,str:60,skl:25,spd:40,lck:60,def:15,res:55,gTotal:305},'green'),
-U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3,res:7,con:5},    {hp:45,str:50,skl:45,spd:45,lck:65,def:15,res:50,gTotal:315},'gold'),
-      ]
-      function U(name, cls, weaponType, stats, growths, palette, startOffset = 0) {
-        return { name, cls, weaponType, stats, growths, palette, startOffset }
-      }
       function promote(u, showLog = true) {
         if (u.promoted) return
         const c = CLASSES[u.cls],
@@ -1236,33 +413,53 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
         u.promoted = true
         u.displayCls = c.promotesTo
         u.lvl = 1
+        u.internalLevel = Math.max(u.internalLevel || 20, 21)
         u.maxHp = u.stats.hp
         u.hp = Math.min(u.hp, u.maxHp)
         if (showLog) logLine(null, `${u.name} promotes to ${u.displayCls}!`, 'heal')
       }
       window.promote = promote
-      function levelUp(u, showLog = true) {
-        if (u.promoted && u.lvl >= 20) return false
-        if (!u.promoted && u.lvl >= 20) {
-          promote(u, showLog)
-          return true
-        }
+      function promotionUnlockedForPlayers() {
+        return battle >= PROMOTION_UNLOCK_AFTER_BATTLE
+      }
+      function promotionUnlockedForEnemies() {
+        return battle > PROMOTION_UNLOCK_AFTER_BATTLE
+      }
+      function currentInternalLevel(u) {
+        return u.internalLevel || (u.promoted ? 20 + u.lvl : u.lvl)
+      }
+      function syncDisplayLevel(u) {
+        const internal = currentInternalLevel(u)
+        u.lvl = u.promoted ? clamp(internal - 20, 1, 20) : clamp(internal, 1, 20)
+      }
+      function applyGrowthLevel(u) {
         const before = { ...u.stats }
-        u.lvl++
         for (const k of ['hp', 'str', 'skl', 'spd', 'lck', 'def', 'res']) {
           if (rint(100) + 1 <= u.growths[k]) u.stats[k] = Math.min(capStat(u, k), u.stats[k] + 1)
         }
         u.maxHp = u.stats.hp
         u.hp = Math.min(u.hp, u.maxHp)
+        return ['hp', 'str', 'skl', 'spd', 'lck', 'def', 'res'].filter((k) => u.stats[k] > before[k])
+      }
+      function advanceInternalLevel(u, allowPromotion, showLog = true) {
+        if (u.promoted && u.lvl >= 20) return false
+        if (!u.promoted && u.lvl >= 20 && allowPromotion) {
+          promote(u, showLog)
+          return true
+        }
+        const gains = applyGrowthLevel(u)
+        u.internalLevel = Math.min(40, currentInternalLevel(u) + 1)
+        syncDisplayLevel(u)
         if (showLog) {
-          const gains =
-            ['hp', 'str', 'skl', 'spd', 'lck', 'def', 'res']
-              .filter((k) => u.stats[k] > before[k])
-              .map((k) => k.toUpperCase())
-              .join(', ') || 'no stats'
-          logLine(null, `${u.name} reached Lv ${u.lvl}${u.promoted ? ' promoted' : ''}: ${gains}.`, 'heal')
+          const gainsText = gains.map((k) => k.toUpperCase()).join(', ') || 'no stats'
+          logLine(null, `${u.name} reached ${levelLabel(u)}: ${gainsText}.`, 'heal')
         }
         return true
+      }
+      function levelUp(u, showLog = true) {
+        if (u.promoted && u.lvl >= 20) return false
+        if (!u.promoted && u.lvl >= 20 && !promotionUnlockedForPlayers()) return false
+        return advanceInternalLevel(u, promotionUnlockedForPlayers(), showLog)
       }
       window.levelUp = levelUp
       function advanceTwoLevels(units) {
@@ -1283,6 +480,7 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
             palette: enemy ? 'red' : base.palette,
             kind: c.kind,
             lvl: 1,
+            internalLevel: 1,
             promoted: false,
             stats: { ...base.stats },
             growths: { ...base.growths },
@@ -1297,7 +495,7 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
         u.hp = u.maxHp
         const requestedInternalLevel = (promoted ? 20 + targetLevel : targetLevel) + (base.startOffset || 0)
         const internalLevel = clamp(requestedInternalLevel, 1, 40)
-        for (let i = 1; i < internalLevel; i++) levelUp(u, false)
+        while (currentInternalLevel(u) < internalLevel) advanceInternalLevel(u, promoted, false)
         u.hp = u.maxHp
         return u
       }
@@ -1308,8 +506,18 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
       function cloneWeapon(w) {
         return { ...w }
       }
+      function cloneConsumable(item) {
+        return item ? { ...item } : null
+      }
+      function consumableById(id) {
+        return CONSUMABLES.find((item) => item.id === id)
+      }
+      function startingConsumables() {
+        return [cloneConsumable(consumableById('vulnerary')), cloneConsumable(consumableById('speed_tonic')), null]
+      }
       function allowedWeapons(u) {
         const base = [u.weaponType]
+        if (u.cls === 'Thief') base.push('dagger')
         if (u.promoted) {
           if (['Lord', 'Mercenary', 'Myrmidon', 'Thief'].includes(u.cls)) base.push('sword')
           if (u.cls === 'Fighter') base.push('bow')
@@ -1331,44 +539,36 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
           (w.crit || 0) / 2 -
           (w.wt || 0) / 3 +
           (w.pierceRes ? 12 : 0) +
+          (w.halfDef ? 10 : 0) +
           (w.brave ? 18 : 0) +
           (w.reaver ? 5 : 0) +
           (w.effective ? 8 : 0) +
           (w.drain ? 10 : 0) +
           (w.staff ? 4 : 0) +
+          (w.speedBonus || 0) * 4 +
+          (w.defBonus || 0) * 4 +
+          (w.resBonus || 0) * 4 +
+          (w.poison ? 10 : 0) +
           staffFx
         )
+      }
+      function bossWeaponRanks(tier) {
+        const lateBoss = battle > 10
+        if (tier === BOSS_TIER_BIOME) return lateBoss ? ['A', 'S'] : ['B', 'A']
+        if (tier === BOSS_TIER_REGULAR) return lateBoss ? ['B', 'A'] : ['C', 'B']
+        return []
+      }
+      function bossWeaponPool(opts, tier) {
+        const ranks = bossWeaponRanks(tier)
+        if (!ranks.length) return opts
+        const ranked = opts.filter((w) => ranks.includes(w.rank))
+        return ranked.length ? ranked : opts
       }
       function enemyWeaponFor(u, tier) {
         const opts = WEAPONS.filter((w) => allowedWeapons(u).includes(w.type))
         if (!opts.length) return u.weapon
-        if (tier === BOSS_TIER_SUPER) {
-          const silver = opts.filter(
-            (w) =>
-              w.name.startsWith('Silver') ||
-              [
-                'Regal Blade',
-                'Brave Sword',
-                'Brave Lance',
-                'Brave Axe',
-                'Brave Bow',
-                'Excalibur',
-                'Fimbulvetr',
-                'Aureola',
-                'Aura',
-                'Ereshkigal',
-                'Fenrir',
-                'Divine',
-                'Luna',
-                'Nosferatu',
-                'Elfire',
-                'Shine',
-                'Fortify Staff',
-                'Berserk Staff',
-                'Mend Staff',
-              ].includes(w.name)
-          )
-          const chosen = cloneWeapon((silver.length ? silver : opts).sort((a, b) => weaponScore(b) - weaponScore(a))[0])
+        if (tier === BOSS_TIER_BIOME) {
+          const chosen = cloneWeapon(pick(bossWeaponPool(opts, tier)))
           if (!chosen.staff) {
             chosen.name = chosen.name.includes('+') ? chosen.name : chosen.name + '+'
             chosen.mt += 2
@@ -1377,8 +577,8 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
           return chosen
         }
         if (tier === BOSS_TIER_REGULAR) {
-          const good = opts.filter((w) => !w.name.startsWith('Iron') && w.name !== 'Heal Staff')
-          return cloneWeapon((good.length ? good : opts).sort((a, b) => weaponScore(b) - weaponScore(a))[0])
+          const bossOpts = bossWeaponPool(opts, tier)
+          return cloneWeapon(bossOpts.sort((a, b) => weaponScore(b) - weaponScore(a))[0])
         }
         if (battle > 4) {
           const good = opts.filter((w) => !w.name.startsWith('Iron') && w.name !== 'Heal Staff')
@@ -1394,7 +594,7 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
       function isWeaponEffective(w, d) {
         if (!w?.effective) return false
         const tags = unitTags(d)
-        return w.effective.some((e) => tags.includes(e) || (e === 'swordUser' && allowedWeapons(d).includes('sword')))
+        return w.effective.some((e) => (e === 'swordUser' ? d.weapon?.type === 'sword' : tags.includes(e)))
       }
       function triangle(a, b, aw = null, bw = null) {
         const beats = { sword: 'axe', axe: 'lance', lance: 'sword', anima: 'light', light: 'dark', dark: 'anima' }
@@ -1408,9 +608,46 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
         const mult = (aRev || bRev) && !(aRev && bRev) ? 2 : 1
         return { atk: sign * mult, hit: sign * 15 * mult }
       }
+      function biomeStatDelta(stat) {
+        const effects = activeBiomeEffects()
+        let delta = 0
+        if (stat === 'def') {
+          if (effects.includes('defUp')) delta += BIOME_STAT_DELTA
+          if (effects.includes('defDown')) delta -= BIOME_STAT_DELTA
+        }
+        if (stat === 'res') {
+          if (effects.includes('resUp')) delta += BIOME_STAT_DELTA
+          if (effects.includes('resDown')) delta -= BIOME_STAT_DELTA
+        }
+        if (stat === 'lck') {
+          if (effects.includes('luckUp')) delta += BIOME_STAT_DELTA
+          if (effects.includes('luckDown')) delta -= BIOME_STAT_DELTA
+        }
+        return delta
+      }
+      function combatStat(u, stat) {
+        let value = u.stats[stat] || 0
+        if (stat === 'spd' && hasBiomeEffect('speedDown')) value = floor(value * BIOME_SPEED_MULTIPLIER)
+        return Math.max(0, value + biomeStatDelta(stat))
+      }
+      function biomePhysicalPowerDelta(weapon) {
+        return hasBiomeEffect('strUp') && !weapon?.magic ? BIOME_STAT_DELTA : 0
+      }
+      function biomeAvoidDelta() {
+        let delta = 0
+        if (hasBiomeEffect('avoidUp')) delta += BIOME_AVOID_DELTA
+        if (hasBiomeEffect('avoidDown')) delta -= BIOME_AVOID_DELTA
+        return delta
+      }
       function attackSpeed(u) {
         const penalty = Math.max(0, (u.weapon?.wt || 0) - u.stats.con)
-        return Math.max(0, u.stats.spd - penalty)
+        return Math.max(0, combatStat(u, 'spd') + (u.weapon?.speedBonus || 0) - penalty)
+      }
+      function combatDefense(u) {
+        return combatStat(u, 'def') + (u.weapon?.defBonus || 0)
+      }
+      function combatResistance(u) {
+        return combatStat(u, 'res') + (u.weapon?.resBonus || 0)
       }
       function effectiveMt(a, d) {
         const coeff = isWeaponEffective(a.weapon, d) ? 2 : 1
@@ -1418,22 +655,23 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
       }
       function attackPower(a, d) {
         const t = triangle(a.weapon.type, d.weapon.type, a.weapon, d.weapon).atk
-        const stat = a.stats.str
-        return stat + effectiveMt(a, d) + t
+        const stat = combatStat(a, 'str')
+        return stat + effectiveMt(a, d) + t + biomePhysicalPowerDelta(a.weapon)
       }
       function defenseAgainst(d, weapon) {
-        return weapon.magic ? d.stats.res : d.stats.def
+        return weapon.magic ? combatResistance(d) : combatDefense(d)
       }
       function rawDamage(a, d) {
-        const def = a.weapon.pierceRes ? 0 : defenseAgainst(d, a.weapon)
-        return Math.max(0, attackPower(a, d) - def)
+        let def = a.weapon.pierceRes ? 0 : defenseAgainst(d, a.weapon)
+        if (a.weapon.halfDef) def = floor(def / 2)
+        return Math.max(1, attackPower(a, d) - def)
       }
       function hitRate(a, d) {
         const t = triangle(a.weapon.type, d.weapon.type, a.weapon, d.weapon).hit
-        return floor(a.weapon.hit + 2 * a.stats.skl + a.stats.lck / 2 + t)
+        return floor(a.weapon.hit + 2 * combatStat(a, 'skl') + combatStat(a, 'lck') / 2 + t)
       }
       function avoid(d) {
-        return floor(2 * attackSpeed(d) + d.stats.lck)
+        return floor(2 * attackSpeed(d) + combatStat(d, 'lck') + biomeAvoidDelta())
       }
       function displayedHit(a, d) {
         return clamp(hitRate(a, d) - avoid(d), 0, 100)
@@ -1443,8 +681,8 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
         return rn <= displayed
       }
       function critRate(a, d) {
-        let bonus = ['Swordmaster', 'Assassin', 'Berserker'].includes(a.displayCls) ? 15 : 0
-        return clamp(floor((a.weapon.crit || 0) + a.stats.skl / 2 + bonus - d.stats.lck), 0, 100)
+        let bonus = ['Swordmaster', 'Assassin', 'Berserker', 'Sniper'].includes(a.displayCls) ? 15 : 0
+        return clamp(floor((a.weapon.crit || 0) + combatStat(a, 'skl') / 2 + combatStat(a, 'lck') / 2 + bonus - combatStat(d, 'lck')), 0, 100)
       }
       function triangleClass(a, d) {
         if (!a?.weapon || !d?.weapon) return 'hitNeu'
@@ -1456,8 +694,10 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
         const hit = displayedHit(actor, target),
           crit = critRate(actor, target),
           dmg = rawDamage(actor, target),
-          hits = (canDouble(actor, target) ? 2 : 1) * (actor.weapon?.brave ? 2 : 1)
-        return `<div><span class="${triangleClass(actor, target)}">${hit}%</span> <span class="critLine">- ${crit}% crit</span></div><div>${dmg} dmg (x${hits})</div>`
+          hits = (canDouble(actor, target) ? 2 : 1) * (actor.weapon?.brave ? 2 : 1),
+          dmgClass = isWeaponEffective(actor.weapon, target) ? 'effectiveDamage' : '',
+          hitCountClass = hits >= 4 ? 'attackCount attackCountQuad' : hits >= 2 ? 'attackCount attackCountMulti' : 'attackCount'
+        return `<div><span class="${triangleClass(actor, target)}">${hit}%</span> <span class="critLine">- ${crit}% crit</span></div><div><span class="${dmgClass}">${dmg} dmg</span> <span class="${hitCountClass}">(x${hits})</span></div>`
       }
       function classAbbrev(cls) {
         const map = {
@@ -1491,34 +731,6 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
         }
         return map[cls] || String(cls).slice(0, 7)
       }
-      // prettier-ignore
-      const BOSS_NAMES_BY_CLASS = {
-        Lord: ['Lundgren'],
-        'Blade Lord': ['Lundgren'],
-        Mercenary: ['Saar', 'Carjiga'],
-        Hero: ['Linus', 'Caellach', 'Aias'],
-        Myrmidon: ['Glass', 'Lloyd', 'Carlyle'],
-        Swordmaster: ['Lloyd', 'Carlyle'],
-        Thief: ['Leila', 'Jan', 'Legault'],
-        Assassin: ['Jaffar', 'Jerme'],
-        Knight: ['Wire', 'Boies', 'Breguet'],
-        General: ['Darin', 'Tirado', 'Vigarde', 'Bauker'],
-        Cavalier: ['Murray', 'Cameron'],
-        Paladin: ['Eagler', 'Pascal', 'Orson'],
-        Fighter: ['Batta', 'Zugu', 'Bazba', 'O’Neill', 'Bone'],
-        Warrior: ['Oleg', 'Brendan'],
-        Archer: ['Uhai'],
-        Sniper: ['Uhai'],
-        Mage: ['Aion', 'Pablo', 'Selena'],
-        Monk: ['Kenneth', 'Riev'],
-        Sage: ['Sonia', 'Limstella', 'Pablo'],
-        Cleric: ['Kenneth', 'Riev'],
-        Bishop: ['Kenneth', 'Riev'],
-        Shaman: ['Novala', 'Lyon', 'Teodor'],
-        Druid: ['Nergal', 'Teodor'],
-        Wyvern: ['Heath', 'Vaida', 'Glen', 'Valter'],
-        'Wyvern Lord': ['Vaida', 'Glen', 'Valter'],
-      }
       function bossNameFor(u) {
         const list = BOSS_NAMES_BY_CLASS[u.displayCls] || BOSS_NAMES_BY_CLASS[u.cls]
         return list ? list[rint(list.length)] : null
@@ -1532,10 +744,10 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
         return attackSpeed(a) - attackSpeed(d) >= 4
       }
       function healAmount(a) {
-        return Math.max(1, (a.weapon.mt || 10) + floor(a.stats.str / 2))
+        return Math.max(1, (a.weapon.mt || 10) + floor(combatStat(a, 'str') / 2))
       }
       function fortifyAmount(a) {
-        return Math.max(1, a.stats.str)
+        return Math.max(1, combatStat(a, 'str'))
       }
       function staffEffect(w) {
         return w?.staff ? w.effect || 'heal' : null
@@ -1548,13 +760,101 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
         return { sleep: 'Sleep', berserk: 'Berserk' }[fx] || ''
       }
       function statusLabel(u) {
-        return statusName(u.status)
+        return [statusName(u.status), u.poisoned ? 'Poison' : ''].filter(Boolean).join(' ')
+      }
+      function weaponEffectLabels(w) {
+        const labels = []
+        if (w.speedBonus) labels.push(`Spd +${w.speedBonus}`)
+        if (w.defBonus) labels.push(`Def +${w.defBonus}`)
+        if (w.resBonus) labels.push(`Res +${w.resBonus}`)
+        if (w.reaver) labels.push('Reaver')
+        if (w.brave) labels.push('Brave')
+        if (w.magic && ['sword', 'lance', 'axe', 'bow', 'dagger'].includes(w.type)) labels.push('Targets Res')
+        if (w.halfDef) labels.push('Ignores half Def')
+        if (w.poison) labels.push('Poison')
+        if (w.effective?.length) {
+          const names = w.effective.map((e) => ({ armored: 'armor', mounted: 'mount', flying: 'flying', swordUser: 'swords' })[e] || e)
+          labels.push(`Eff: ${names.join('/')}`)
+        }
+        if (w.pierceRes) labels.push('Ignores Res')
+        if (w.drain) labels.push('Drain')
+        return labels
+      }
+      function temporaryBuffLabel(u) {
+        const battleBuffs = Object.entries(u.tempBuffs || {})
+          .filter(([, amt]) => amt > 0)
+          .map(([stat, amt]) => `${stat.toUpperCase()}+${amt}`)
+        const turnBuffs = Object.entries(u.turnBuffs || {})
+          .filter(([, amt]) => amt > 0)
+          .map(([stat, amt]) => `${stat.toUpperCase()}+${amt} turn`)
+        const buffs = [...battleBuffs, ...turnBuffs]
+        if (!buffs.length) return ''
+        return buffs.join(', ')
+      }
+      function clearBuffBucket(u, bucketName) {
+        for (const [stat, amt] of Object.entries(u[bucketName] || {})) {
+          u.stats[stat] = Math.max(0, u.stats[stat] - amt)
+          if (stat === 'hp') {
+            u.maxHp = u.stats.hp
+            u.hp = Math.min(u.hp, u.maxHp)
+          }
+        }
+        u[bucketName] = {}
+      }
+      function clearTemporaryBuffs(units) {
+        units.forEach((u) => {
+          clearBuffBucket(u, 'turnBuffs')
+          clearBuffBucket(u, 'tempBuffs')
+          u.maxHp = u.stats.hp
+          u.hp = Math.min(u.hp, u.maxHp)
+        })
+      }
+      function clearTurnBuffs(u) {
+        clearBuffBucket(u, 'turnBuffs')
+      }
+      function consumableSummary(item) {
+        if (!item) return ''
+        return item.desc || ''
+      }
+      function consumableTargets(item, team = player) {
+        if (!item) return []
+        const living = team.filter((u) => u.hp > 0)
+        if (item.effect === 'heal' || item.effect === 'fullHeal') return living.filter((u) => u.hp < u.maxHp)
+        if (item.effect === 'restore' || item.effect === 'fullHeal') return living.filter((u) => !!u.status)
+        if (item.effect === 'revive') return team.filter((u) => u.hp <= 0)
+        if (item.effect === 'buff' || item.effect === 'turnBuff') {
+          return living.filter((u) => u.stats[item.stat] < capStat(u, item.stat))
+        }
+        return []
+      }
+      function hasUsableConsumable(actor) {
+        return !!actor && consumables.some((item) => item && consumableTargets(item).length)
+      }
+      function applyStatBuff(u, stat, amount, bucketName = 'tempBuffs') {
+        u[bucketName] = u[bucketName] || {}
+        const current = u[bucketName][stat] || 0
+        const room = Math.max(0, capStat(u, stat) - u.stats[stat])
+        const gained = Math.min(amount, room)
+        if (gained <= 0) return 0
+        u.stats[stat] += gained
+        u[bucketName][stat] = current + gained
+        if (stat === 'hp') {
+          u.maxHp = u.stats.hp
+          u.hp = Math.min(u.maxHp, u.hp + gained)
+        }
+        return gained
       }
       function applyStatus(u, fx) {
         u.status = fx
       }
+      function applyPoison(u) {
+        if (u.poisoned) return false
+        u.poisoned = true
+        return true
+      }
       function clearUnitStatus(u) {
         delete u.status
+        delete u.poisoned
       }
 
       function strikeResult(a, d, suffix = '') {
@@ -1574,7 +874,7 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
           logLine(log, `${a.name}${suffix} attacks ${d.name}: miss (${r.dh}% displayed).`, 'miss')
           return r
         }
-        logLine(log, `${a.name}${suffix} hits ${d.name} for ${r.damage}${r.crit ? ' CRIT' : ''}. ${d.name} HP ${d.hp}/${d.maxHp}.`, r.crit ? 'crit' : 'hit')
+        logLine(log, `${a.name}${suffix}${r.crit ? ' CRITICAL' : ''} hits ${d.name} for ${r.damage}. ${d.name} HP ${d.hp}/${d.maxHp}.`, r.crit ? 'crit' : 'hit')
         if (d.hp <= 0) logLine(log, `${d.name} falls.`, 'death')
         return r
       }
@@ -1591,13 +891,23 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
         if (!live.length) return 0
         return live.reduce((sum, d) => sum + expectedDamage(a, d), 0) / live.length
       }
-      function chooseEnemyTarget() {
-        const live = player.filter((x) => x.hp > 0)
+      function chooseAITarget(targets, opposingTeam) {
+        const live = targets.filter((x) => x.hp > 0)
         if (!live.length) return null
         const roll = rnd()
         if (roll < 0.4) return [...live].sort((a, b) => a.hp - b.hp || a.maxHp - b.maxHp)[0]
-        if (roll < 0.8) return [...live].sort((a, b) => avgExpectedDamage(b, enemy) - avgExpectedDamage(a, enemy))[0]
+        if (roll < 0.8) return [...live].sort((a, b) => avgExpectedDamage(b, opposingTeam) - avgExpectedDamage(a, opposingTeam))[0]
         return pick(live)
+      }
+      function chooseEnemyTarget() {
+        return chooseAITarget(player, enemy)
+      }
+      function autoFightTargetFor(actor, allies, foes, stavesExhausted = false) {
+        if (actor.weapon.staff) {
+          if (stavesExhausted) return null
+          return isStatusStaff(actor.weapon) ? chooseStatusStaffTarget(actor, foes) : null
+        }
+        return chooseAITarget(foes, allies)
       }
       function chooseStatusStaffTarget(actor, foes) {
         const live = foes.filter((x) => x.hp > 0)
@@ -1642,7 +952,7 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
         n.className = 'floatText ' + cls
         n.textContent = text
         el.appendChild(n)
-        setTimeout(() => n.remove(), 650)
+        setTimeout(() => n.remove(), cls.includes('damage') ? 950 : 650)
       }
       function selectTarget(actor, targets, prompt) {
         activePreviewActor = actor
@@ -1651,20 +961,69 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
         const ae = spriteEl(actor)
         if (ae) ae.classList.add('active')
         return new Promise((resolve) => {
+          let settled = false
+          const finish = (target) => {
+            if (settled) return
+            settled = true
+            document.querySelectorAll('.combatant').forEach((ex) => {
+              ex.classList.remove('selectable')
+              ex.onclick = null
+            })
+            pendingTargetCancel = null
+            activePreviewActor = null
+            renderTeams()
+            resolve(target)
+          }
+          pendingTargetCancel = () => finish(null)
           targets.forEach((t) => {
             const el = spriteEl(t)
             if (!el) return
             el.classList.add('selectable')
-            el.onclick = () => {
-              document.querySelectorAll('.combatant').forEach((ex) => {
-                ex.classList.remove('selectable')
-                ex.onclick = null
-              })
-              activePreviewActor = null
-              renderTeams()
-              resolve(t)
-            }
+            el.onclick = () => finish(t)
           })
+        })
+      }
+      function selectPlayerAction(actor, targets, prompt, defaultLabel = '') {
+        activePreviewActor = actor
+        activeConsumableActor = actor
+        renderTeams()
+        setStatus(prompt || `${actor.name}'s turn: choose an action.`)
+        const ae = spriteEl(actor)
+        if (ae) ae.classList.add('active')
+        return new Promise((resolve) => {
+          let settled = false
+          const finish = (action) => {
+            if (settled) return
+            settled = true
+            document.querySelectorAll('.combatant').forEach((ex) => {
+              ex.classList.remove('selectable')
+              ex.onclick = null
+            })
+            pendingTargetCancel = null
+            pendingConsumableAction = null
+            pendingAutoFightAction = null
+            pendingDefaultAction = null
+            pendingDefaultLabel = ''
+            activePreviewActor = null
+            activeConsumableActor = null
+            renderTeams()
+            resolve(action)
+          }
+          pendingTargetCancel = () => finish({ type: 'cancel' })
+          pendingConsumableAction = (slot) => finish({ type: 'consumable', slot })
+          pendingAutoFightAction = () => finish({ type: 'auto' })
+          if (defaultLabel) {
+            pendingDefaultLabel = defaultLabel
+            pendingDefaultAction = () => finish({ type: 'default' })
+          }
+          targets.forEach((t) => {
+            const el = spriteEl(t)
+            if (!el) return
+            el.classList.add('selectable')
+            el.onclick = () => finish({ type: 'target', target: t })
+          })
+          renderConsumables()
+          if (autoFight) setTimeout(() => pendingAutoFightAction?.(), 0)
         })
       }
       function nextLivingIndex(team, start) {
@@ -1725,6 +1084,62 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
         logLine(null, `${actor.name} uses Fortify; allies recover ${total} total HP.`, 'heal')
         await sleep(450)
       }
+      async function animateConsumable(actor, target, item) {
+        clearHighlights()
+        const ae = spriteEl(actor),
+          te = spriteEl(target)
+        if (ae) ae.classList.add('active')
+        if (te) te.classList.add('target')
+        await sleep(300)
+        if (item.effect === 'heal' || item.effect === 'fullHeal') {
+          const amount = item.effect === 'fullHeal' ? target.maxHp - target.hp : Math.min(target.maxHp - target.hp, item.amount)
+          target.hp = Math.min(target.maxHp, target.hp + amount)
+          floatText(target, `+${amount}`, 'healing')
+          updateUnitVisual(target)
+          logLine(null, `${actor.name} uses ${item.name} on ${target.name}; ${target.name} recovers ${amount} HP.`, 'heal')
+        } else if (item.effect === 'buff' || item.effect === 'turnBuff') {
+          const bucketName = item.effect === 'turnBuff' ? 'turnBuffs' : 'tempBuffs'
+          const gained = applyStatBuff(target, item.stat, item.amount, bucketName)
+          const duration = item.effect === 'turnBuff' ? 'until its next action ends' : 'for this battle'
+          floatText(target, `${item.stat.toUpperCase()}+${gained}`, 'healing')
+          logLine(null, `${actor.name} uses ${item.name} on ${target.name}; ${target.name} gains ${item.stat.toUpperCase()} +${gained} ${duration}.`, 'heal')
+        } else if (item.effect === 'restore') {
+          const status = statusName(target.status)
+          delete target.status
+          floatText(target, 'RESTORE', 'healing')
+          logLine(null, `${actor.name} uses ${item.name} on ${target.name}; ${status || 'status'} cleared.`, 'heal')
+        } else if (item.effect === 'revive') {
+          const amount = Math.max(1, Math.ceil(target.maxHp / 2))
+          target.hp = amount
+          clearUnitStatus(target)
+          floatText(target, `+${amount}`, 'healing')
+          updateUnitVisual(target)
+          logLine(null, `${actor.name} uses ${item.name} on ${target.name}; ${target.name} returns with ${amount} HP.`, 'heal')
+        }
+        renderSideCards()
+        await sleep(350)
+      }
+      async function useConsumableFromSlot(slot, actor) {
+        const item = consumables[slot]
+        if (!item) {
+          setStatus('That consumable slot is empty.')
+          return false
+        }
+        const targets = consumableTargets(item)
+        if (!targets.length) {
+          setStatus(`${item.name} has no valid target right now.`)
+          return false
+        }
+        const target = await selectTarget(actor, targets, `${actor.name} uses ${item.name}: choose an ally.`)
+        if (!target) {
+          setStatus(`${actor.name} holds onto ${item.name}.`)
+          return false
+        }
+        await animateConsumable(actor, target, item)
+        consumables[slot] = null
+        renderTeams()
+        return true
+      }
       function staffStatusResult(a, d) {
         const dh = displayedHit(a, d)
         return { hit: trueHitRoll(dh), dh, effect: staffEffect(a.weapon) }
@@ -1750,6 +1165,17 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
         logLine(null, msg, cls)
         floatText(actor, 'WAIT', 'missText')
         await sleep(600)
+      }
+      async function applyEndOfTurnStatus(actor) {
+        if (!actor?.poisoned || actor.hp <= 0) return
+        const damage = Math.max(1, floor(actor.maxHp * 0.2))
+        actor.hp = Math.max(0, actor.hp - damage)
+        floatText(actor, `-${damage}`, 'damage')
+        updateUnitVisual(actor)
+        renderSideCards()
+        logLine(null, `${actor.name} takes ${damage} poison damage. ${actor.name} HP ${actor.hp}/${actor.maxHp}.`, 'death')
+        if (actor.hp <= 0) logLine(null, `${actor.name} falls to poison.`, 'death')
+        await sleep(350)
       }
       async function resolveStaffTurn(actor, allies, foes, forcedTarget = null) {
         const fx = staffEffect(actor.weapon)
@@ -1786,7 +1212,7 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
       async function consumeTurnStatus(actor, allies, foes) {
         if (!actor.status) return false
         const fx = actor.status
-        clearUnitStatus(actor)
+        delete actor.status
         renderTeams()
         if (fx === 'sleep') {
           await animateWait(actor, `${actor.name} is asleep and waits.`)
@@ -1835,6 +1261,12 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
               if (target.hp <= 0) logLine(null, `${target.name} falls.`, 'death')
             }
             await animateStrike(actor, target, r)
+            if (actor.weapon?.poison && r.hit && target.hp > 0 && applyPoison(target)) {
+              logLine(null, `${target.name} is poisoned.`, 'crit')
+              floatText(target, 'POISON', 'missText')
+              renderSideCards()
+              await sleep(250)
+            }
             if (actor.weapon?.drain && r.hit && r.damage > 0) {
               const before = actor.hp
               actor.hp = Math.min(actor.maxHp, actor.hp + r.damage)
@@ -1854,18 +1286,175 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
         draftOptions = [],
         player = [],
         enemy = [],
+        consumables = [],
+        shopOffers = [],
+        biomePlan = [],
         battle = 0,
+        gold = 0,
         awaitingReward = false,
         battleRunning = false,
+        shopOpen = false,
+        pendingShopAfterReward = false,
+        autoFight = false,
         filter = 'all',
         activePreviewActor = null,
-        nextEnemyMarkerId = null
-      const ROSTER_SIZE = 5,
-        DRAFT_CHOICES_PER_SLOT = 3,
-        LEADER_BONUS_LEVELS = 4,
-        BOSS_TIER_REGULAR = 'regular',
-        BOSS_TIER_SUPER = 'super'
+        activeConsumableActor = null,
+        nextEnemyMarkerId = null,
+        pendingTargetCancel = null,
+        pendingConsumableAction = null,
+        pendingAutoFightAction = null,
+        pendingDefaultAction = null,
+        pendingDefaultLabel = ''
       const $ = (id) => document.getElementById(id)
+      function formatGold(amount) {
+        return `${amount} G`
+      }
+      function goldHTML(amount) {
+        return `<span class="goldAmount">${formatGold(amount)}</span>`
+      }
+      function updateGoldUI() {
+        const el = $('goldLabel')
+        if (el) el.textContent = formatGold(gold)
+      }
+      function addGold(amount) {
+        gold += amount
+        updateGoldUI()
+      }
+      function spendGold(amount) {
+        if (gold < amount) return false
+        gold -= amount
+        updateGoldUI()
+        return true
+      }
+      function shuffledCopy(items) {
+        const out = [...items]
+        for (let i = out.length - 1; i > 0; i--) {
+          const j = rint(i + 1)
+          const tmp = out[i]
+          out[i] = out[j]
+          out[j] = tmp
+        }
+        return out
+      }
+      function makeBiomePlan() {
+        const pool = shuffledCopy(BIOMES)
+        return Array.from({ length: BIOME_CYCLES_PER_RUN }, (_, i) => {
+          const biome = pool[i % pool.length]
+          return { biome, bossFocus: shuffledCopy(biome.focus) }
+        })
+      }
+      function biomeIndexForBattle(n = battle || 1) {
+        return clamp(Math.floor((Math.max(1, n) - 1) / BIOME_CYCLE_LENGTH), 0, Math.max(0, biomePlan.length - 1))
+      }
+      function biomeEntryForBattle(n = battle || 1) {
+        return biomePlan[biomeIndexForBattle(n)] || null
+      }
+      function activeBiomeEntry() {
+        return biomeEntryForBattle(battle || 1)
+      }
+      function activeBiomeEffects() {
+        return activeBiomeEntry()?.biome.effects || []
+      }
+      function hasBiomeEffect(effect) {
+        return activeBiomeEffects().includes(effect)
+      }
+      function biomeEffectLabel(effect) {
+        const labels = {
+          avoidUp: `Avo +${BIOME_AVOID_DELTA}`,
+          avoidDown: `Avo -${BIOME_AVOID_DELTA}`,
+          defUp: `Def +${BIOME_STAT_DELTA}`,
+          defDown: `Def -${BIOME_STAT_DELTA}`,
+          resUp: `Res +${BIOME_STAT_DELTA}`,
+          resDown: `Res -${BIOME_STAT_DELTA}`,
+          luckUp: `Lck +${BIOME_STAT_DELTA}`,
+          luckDown: `Lck -${BIOME_STAT_DELTA}`,
+          strUp: `Str +${BIOME_STAT_DELTA}`,
+          speedDown: `Spd x${BIOME_SPEED_MULTIPLIER}`,
+        }
+        return labels[effect] || effect
+      }
+      function biomeEffectLabels(biome) {
+        return biome.effects.length ? biome.effects.map(biomeEffectLabel) : ['Neutral']
+      }
+      function focusLabel(focus) {
+        return focus.label || focus.cls
+      }
+      function focusMatchesBase(focus, base) {
+        return base.cls === focus.cls && (!focus.weaponType || base.weaponType === focus.weaponType)
+      }
+      function pickBaseFromPool(pool, focusList = null) {
+        const candidates = focusList?.length
+          ? pool.map((b, idx) => ({ b, idx })).filter(({ b }) => focusList.some((focus) => focusMatchesBase(focus, b)))
+          : pool.map((b, idx) => ({ b, idx }))
+        const picked = pick(candidates.length ? candidates : pool.map((b, idx) => ({ b, idx })))
+        return pool.splice(picked.idx, 1)[0]
+      }
+      function enemyFocusForSlot(isBossSlot, bossTier) {
+        if (isBossSlot) {
+          const bossFocus = bossFocusForBattle(battle)
+          return bossFocus ? [bossFocus] : null
+        }
+        const biomeFocus = activeBiomeEntry()?.biome.focus || []
+        return biomeFocus.length && rnd() < BIOME_FOCUS_CHANCE ? biomeFocus : null
+      }
+      function bossFocusForBattle(n = battle) {
+        const entry = biomeEntryForBattle(n)
+        if (!entry) return null
+        const cycle = ((n - 1) % BIOME_CYCLE_LENGTH) + 1
+        if (cycle === 3) return entry.bossFocus[0]
+        if (cycle === BIOME_CYCLE_LENGTH) return entry.bossFocus[1]
+        return null
+      }
+      function biomeUnitIconHTML(focus, bossIndex, promoted = false) {
+        const label = `${bossIndex === 0 ? 'Boss' : 'Biome boss'}: ${focusLabel(focus)}`
+        return `<span title="${htmlAttr(label)}">${mapSpriteForFocus(focus, 'red', promoted)}</span>`
+      }
+      function renderBiomeMap() {
+        const el = $('biomeMap')
+        if (!el) return
+        if (!biomePlan.length) {
+          el.innerHTML = ''
+          return
+        }
+        const activeIndex = biomeIndexForBattle(battle || 1)
+        el.innerHTML = biomePlan
+          .map((entry, i) => {
+            const biome = entry.biome,
+              classes = i < activeIndex ? 'biomeNode done' : i === activeIndex ? 'biomeNode active' : 'biomeNode',
+              effects = biomeEffectLabels(biome),
+              title = `${biome.name}: ${effects.join(', ')}. Bosses: ${entry.bossFocus.map(focusLabel).join(' / ')}`
+            return `<div class="${classes}" title="${htmlAttr(title)}"><img class="biomeTile" src="assets/femp/biomes/${htmlAttr(biome.id)}.jpg" alt="" aria-hidden="true"><div class="biomeUnits">${entry.bossFocus.map((focus, bossIndex) => biomeUnitIconHTML(focus, bossIndex, i >= 2)).join('')}</div><div class="biomeInfo"><div class="biomeName">${biome.name}</div><div class="biomeEffects">${effects.map((effect) => `<span class="biomeEffect">${effect}</span>`).join('')}</div></div></div>`
+          })
+          .join('')
+      }
+      function setShopOpen(open) {
+        shopOpen = open
+        const battleView = $('battleView'),
+          shopScreen = $('shopScreen'),
+          title = $('mainModeTitle'),
+          autoBtn = $('autoFightBtn')
+        if (battleView) battleView.classList.toggle('hidden', open)
+        if (shopScreen) shopScreen.classList.toggle('hidden', !open)
+        if (title) title.textContent = open ? 'Shop' : 'Arena'
+        if (autoBtn) autoBtn.classList.toggle('hidden', open)
+        updateAutoFightButton()
+      }
+      function updateAutoFightButton() {
+        const btn = $('autoFightBtn')
+        if (!btn) return
+        const canAuto = !shopOpen && battleRunning && !awaitingReward && player.some((x) => x.hp > 0) && enemy.some((x) => x.hp > 0)
+        btn.disabled = !canAuto
+        btn.classList.toggle('active', autoFight)
+        btn.setAttribute('aria-pressed', autoFight ? 'true' : 'false')
+        btn.textContent = autoFight ? 'Auto-fight: On' : 'Auto-fight: Off'
+      }
+      function setAutoFight(enabled, silent = false) {
+        if (!battleRunning && enabled) return
+        autoFight = enabled
+        updateAutoFightButton()
+        if (!silent) setStatus(autoFight ? 'Auto-fight enabled.' : 'Auto-fight disabled.')
+        if (autoFight) pendingAutoFightAction?.()
+      }
       function selectedRosterCount() {
         return chosen.filter(Boolean).length
       }
@@ -1904,6 +1493,7 @@ U('L’Arachel','Cleric','staff', {bTotal:36,hp:18,str:4,skl:5,spd:8,lck:9,def:3
 ${growLine}</div>`
       }
       function renderDraft() {
+        renderBiomeMap()
         const selectedCount = selectedRosterCount()
         $('rosterCount').textContent = selectedCount
         $('draftHint').textContent =
@@ -1927,7 +1517,7 @@ ${growLine}</div>`
               const el = document.createElement('button')
               el.type = 'button'
               el.className = `draftChoice unitCard ${chosen[slotIndex] === b.name ? 'selected' : ''}`
-              const personalNote = b.startOffset ? ` · personal +${b.startOffset} levels` : ''
+              const personalNote = b.startOffset ? ` · starts with +${b.startOffset} levels` : ''
               el.innerHTML = `${portraitImgForBase(b, c)}<div><div class="row space"><div><div class="name">${b.name}</div><div class="class">${b.cls} · ${b.weaponType}${personalNote}</div></div><span class="pill">${startingWeapon(b.weaponType).name}</span></div>${growthCompareHTML(b)}</div>`
               el.onclick = () => {
                 chosen[slotIndex] = b.name
@@ -1963,12 +1553,7 @@ ${growLine}</div>`
               ['Crit', w.crit || 0],
               ['Wt', w.wt],
             ]
-        const eff = []
-        if (w.reaver) eff.push('Reave')
-        if (w.brave) eff.push('Brave')
-        if (w.effective) eff.push('Eff')
-        if (w.pierceRes) eff.push('No Res')
-        if (w.drain) eff.push('Drain')
+        const eff = weaponEffectLabels(w)
         if (eff.length) labels.push([eff.join('/'), ''])
         return `<div class="weaponStats">${labels.map(([k, v]) => `<span><b>${k}</b> ${v}</span>`).join('')}</div>`
       }
@@ -1980,11 +1565,36 @@ ${growLine}</div>`
         const st = statusLabel(u)
         const status = st ? ` · ${st}` : ''
         const leader = u.isLeader ? ' · Leader' : ''
+        const buffs = temporaryBuffLabel(u)
+        const buffText = buffs ? ` · ${buffs}` : ''
         const portrait = portraitImgForUnit(u)
-        return `<div class="card unitCard ${u.hp <= 0 ? 'dead' : ''}">${portrait}<div><div class="row space"><div><div class="name">${u.name}</div><div class="class">${u.displayCls} Lv ${u.lvl}${u.promoted ? ' promoted' : ''}${leader}${wt}${status}</div></div><span class="pill">AS ${attackSpeed(u)}</span></div><div class="hpbar"><i style="width:${(100 * u.hp) / u.maxHp}%"></i></div><div class="small">HP ${u.hp}/${u.maxHp} · Hit ${u.weapon.staff ? '--' : hitRate(u, { weapon: { type: 'none' }, stats: { lck: 0, spd: 0, con: 99 } })} · Avo ${avoid(u)} · Crit ${u.weapon.staff ? '--' : floor((u.weapon.crit || 0) + u.stats.skl / 2)}</div>${weaponStatHTML(u.weapon)}<div class="stats">${statHTML(u.stats)}</div></div></div>`
+        return `<div class="card unitCard ${u.hp <= 0 ? 'dead' : ''}">${portrait}<div><div class="row space"><div><div class="name">${u.name}</div><div class="class">${u.displayCls} ${levelLabel(u)}${leader}${wt}${status}${buffText}</div></div><span class="pill">AS ${attackSpeed(u)}</span></div><div class="hpbar"><i style="width:${(100 * u.hp) / u.maxHp}%"></i></div><div class="small">HP ${u.hp}/${u.maxHp} · Hit ${u.weapon.staff ? '--' : hitRate(u, { weapon: { type: 'none' }, stats: { lck: 0, spd: 0, con: 99 } })} · Avo ${avoid(u)} · Crit ${u.weapon.staff ? '--' : floor((u.weapon.crit || 0) + u.stats.skl / 2)}</div>${weaponStatHTML(u.weapon)}<div class="stats">${statHTML(u.stats)}</div></div></div>`
       }
 
+      function renderConsumables() {
+        const panel = $('consumablePanel')
+        if (!panel) return
+        const actor = activeConsumableActor?.hp > 0 ? activeConsumableActor : null
+        const filled = consumables.filter(Boolean).length
+        const slots = Array.from({ length: CONSUMABLE_SLOTS }, (_, i) => consumables[i] || null)
+        const slotHtml = slots
+          .map((item, i) => {
+            if (!item) return `<div class="consumableSlot empty"><div class="small">Slot ${i + 1}</div><div>Empty</div></div>`
+            const targets = actor ? consumableTargets(item) : []
+            const canUse = !!(actor && pendingConsumableAction && targets.length)
+            const title = canUse ? `Use ${item.name}` : actor ? 'No valid target right now' : 'Usable on player turns'
+            return `<div class="consumableSlot"><div class="small">${weaponTierLabel(item.tier)}</div><div class="name">${item.name}</div><div class="small">${consumableSummary(item)}</div><button data-use-consumable="${i}" title="${htmlAttr(title)}"${canUse ? '' : ' disabled'}>Use</button></div>`
+          })
+          .join('')
+        const defaultButton = pendingDefaultAction ? `<button class="turnAction" data-default-action>${pendingDefaultLabel}</button>` : ''
+        const activeNote = actor ? `<div class="small">Active: ${actor.name}</div>` : ''
+        panel.innerHTML = `<div class="row space"><h3>Consumables</h3><span class="badge">${filled}/${CONSUMABLE_SLOTS}</span></div>${activeNote}<div class="consumableSlots">${slotHtml}</div>${defaultButton}`
+        panel.querySelectorAll('[data-use-consumable]').forEach((btn) => (btn.onclick = () => pendingConsumableAction?.(+btn.dataset.useConsumable)))
+        const defaultBtn = panel.querySelector('[data-default-action]')
+        if (defaultBtn) defaultBtn.onclick = () => pendingDefaultAction?.()
+      }
       function renderSideCards() {
+        renderConsumables()
         $('playerTeam').innerHTML = player.map(unitCard).join('')
         $('enemyTeam').innerHTML = enemy.map(unitCard).join('')
       }
@@ -1995,21 +1605,24 @@ ${growLine}</div>`
       function renderTeams() {
         $('battleNo').textContent = battle
         $('rosterCount').textContent = player.length || selectedRosterCount()
+        updateGoldUI()
+        renderBiomeMap()
         renderSideCards()
         $('blueSprites').innerHTML = player.map((u) => combatantSpriteSlot(u, false)).join('')
         $('redSprites').innerHTML = enemy.map((u) => combatantSpriteSlot(u, true)).join('')
+        updateAutoFightButton()
       }
       function combatantSpriteSlot(u, isEnemy = false) {
         const preview = isEnemy ? combatPreviewHTML(activePreviewActor, u) : ''
         const previewClass = preview ? 'combatPreview' : 'combatPreview empty'
-        const boss = u.bossTier === BOSS_TIER_SUPER ? ' <div class="bossTag">SUPER BOSS</div>' : u.bossTier === BOSS_TIER_REGULAR ? ' <div class="bossTag">BOSS</div>' : ''
+        const boss = u.bossTier === BOSS_TIER_BIOME ? ' <div class="bossTag">BIOME BOSS</div>' : u.bossTier === BOSS_TIER_REGULAR ? ' <div class="bossTag">BOSS</div>' : ''
         const st = statusLabel(u)
         const status = st ? ` ${st}` : ''
         const next =
           isEnemy && u.id === nextEnemyMarkerId && u.hp > 0
             ? '<span class="nextMarker" title="Moves next" aria-label="Moves next"><svg viewBox="0 0 24 24" role="img" focusable="false"><path d="M12 20 L4 8 H20 Z"/></svg></span>'
             : ''
-        const hpLine = isEnemy ? `L${u.lvl} - ${u.hp}/${u.maxHp}` : `${u.hp}/${u.maxHp}`
+        const hpLine = `${levelLabel(u)} - ${u.hp}/${u.maxHp}`
         return `<div class="combatSlot"><div class="combatant ${u.hp <= 0 ? 'dead' : ''}" data-id="${u.id}">${next}${battleImgForUnit(u)}<div class="small">${u.name}${boss}${status}</div><div class="hpbar"><i style="width:${(100 * u.hp) / u.maxHp}%"></i></div><div class="hpText">${hpLine}</div></div><div class="${previewClass}">${preview || '&nbsp;'}</div></div>`
       }
       function logLine(logEl, msg, cls = '') {
@@ -2030,6 +1643,7 @@ ${growLine}</div>`
           u.isLeader = i === 0
           return u
         })
+        consumables = startingConsumables()
         $('draftScreen').classList.add('hidden')
         $('gameScreen').classList.remove('hidden')
         renderTeams()
@@ -2037,8 +1651,8 @@ ${growLine}</div>`
         showRewards(true)
       }
       function bossTierForBattle(n) {
-        const cycle = ((n - 1) % 5) + 1
-        if (cycle === 5) return BOSS_TIER_SUPER
+        const cycle = ((n - 1) % BIOME_CYCLE_LENGTH) + 1
+        if (cycle === BIOME_CYCLE_LENGTH) return BOSS_TIER_BIOME
         if (cycle === 3) return BOSS_TIER_REGULAR
         return null
       }
@@ -2049,12 +1663,14 @@ ${growLine}</div>`
         enemy = []
         const pool = [...BASES]
         for (let i = 0; i < 5; i++) {
-          const b = pool.splice(rint(pool.length), 1)[0] || pick(BASES)
           const isBossSlot = i === 0 && bossTier
-          const internal = clamp(baseInternal + (isBossSlot ? (bossTier === BOSS_TIER_SUPER ? 6 : 4) : 0), 1, 40)
-          const promoted = internal > 20
+          const b = pickBaseFromPool(pool, enemyFocusForSlot(isBossSlot, bossTier)) || pick(BASES)
+          const internal = clamp(baseInternal + (isBossSlot ? (bossTier === BOSS_TIER_BIOME ? 6 : 4) : 0), 1, 40)
+          const promoted = promotionUnlockedForEnemies() && internal > 20
           const lvl = promoted ? internal - 20 : internal
           const e = freshFromBase(b, true, lvl, promoted)
+          e.lvl = clamp(lvl + Math.ceil(b.startOffset / 2), 1, 20)
+          e.maxHp = isBossSlot ? floor(e.maxHp * 1.25) : e.maxHp
           e.bossTier = isBossSlot ? bossTier : null
           e.palette = 'red'
           e.team = 'red'
@@ -2067,13 +1683,15 @@ ${growLine}</div>`
         nextEnemyMarkerId = null
         $('log').innerHTML = ''
         setStatus('')
+        const biome = activeBiomeEntry()?.biome
+        const biomePrefix = biome ? `${biome.name} (${biomeEffectLabels(biome).join(', ')}): ` : ''
         const msg =
-          bossTier === BOSS_TIER_SUPER
-            ? 'Super boss fight: slot 1 is +6 levels with silver+ gear.'
+          bossTier === BOSS_TIER_BIOME
+            ? 'Biome boss fight: slot 1 is +6 levels with a random empowered weapon.'
             : bossTier === BOSS_TIER_REGULAR
               ? 'Regular boss fight: slot 1 is +4 levels.'
               : 'Standard enemy team.'
-        logLine(null, `Battle ${battle}: ${msg}`, bossTier ? 'crit' : 'hit')
+        logLine(null, `Battle ${battle}: ${biomePrefix}${msg}`, bossTier ? 'crit' : 'hit')
         renderTeams()
       }
       function beginNextBattle() {
@@ -2081,8 +1699,18 @@ ${growLine}</div>`
         generateEnemy()
         runBattle()
       }
-      // prettier-ignore
-      const enemyNames = ['Bandit', 'Raider', 'Arena', 'Fang', 'Knight', 'Nomad', 'Mage', 'Rogue', 'Wyvern', 'Merc']
+      function debugWinBattle() {
+        if (!battleRunning || !enemy.some((x) => x.hp > 0)) return
+        enemy.forEach((u) => {
+          u.hp = 0
+          clearUnitStatus(u)
+        })
+        if (pendingTargetCancel) pendingTargetCancel()
+        clearHighlights()
+        setStatus('Debug win: enemy team defeated.')
+        logLine(null, 'Debug hotkey: enemy team defeated.', 'crit')
+        renderTeams()
+      }
       async function runBattle() {
         if (battleRunning || !enemy.length) return
         battleRunning = true
@@ -2109,31 +1737,54 @@ ${growLine}</div>`
               const ae = spriteEl(actor)
               if (ae) ae.classList.add('active')
               if (await consumeTurnStatus(actor, player, enemy)) {
+                await applyEndOfTurnStatus(actor)
+                clearTurnBuffs(actor)
                 pIdx = (pIdx + 1) % player.length
                 actions++
                 side = 'enemy'
                 continue
               }
               let target = null
-              if (actor.weapon.staff && !stavesExhausted) {
-                if (isStatusStaff(actor.weapon))
-                  target = await selectTarget(
+              if (autoFight) {
+                target = autoFightTargetFor(actor, player, enemy, stavesExhausted)
+              } else if (actor.weapon.staff && !stavesExhausted) {
+                if (isStatusStaff(actor.weapon)) {
+                  const action = await selectPlayerAction(
                     actor,
                     enemy.filter((x) => x.hp > 0),
-                    `${actor.name}'s turn: choose an enemy for ${actor.weapon.name}.`
+                    `${actor.name}'s turn: choose an enemy for ${actor.weapon.name}, or use a consumable.`
                   )
-                else setStatus(`${actor.name} looks for an ally to heal.`)
+                  if (action?.type === 'consumable') {
+                    await useConsumableFromSlot(action.slot, actor)
+                    continue
+                  }
+                  target = action?.type === 'auto' ? autoFightTargetFor(actor, player, enemy, stavesExhausted) : action?.target || null
+                } else setStatus(`${actor.name} looks for an ally to heal.`)
               } else if (actor.weapon.staff) {
-                setStatus(`${actor.name}'s staff is out of uses.`)
+                if (hasUsableConsumable(actor)) {
+                  const action = await selectPlayerAction(actor, [], `${actor.name}'s staff is out of uses. Use a consumable or end turn.`, 'End turn')
+                  if (action?.type === 'consumable') {
+                    await useConsumableFromSlot(action.slot, actor)
+                    continue
+                  }
+                  setStatus(`${actor.name}'s staff is out of uses.`)
+                } else setStatus(`${actor.name}'s staff is out of uses.`)
               } else {
-                target = await selectTarget(
+                const action = await selectPlayerAction(
                   actor,
                   enemy.filter((x) => x.hp > 0),
-                  `${actor.name}'s turn: choose an enemy to attack.`
+                  `${actor.name}'s turn: choose an enemy to attack, or use a consumable.`
                 )
+                if (action?.type === 'consumable') {
+                  await useConsumableFromSlot(action.slot, actor)
+                  continue
+                }
+                target = action?.type === 'auto' ? autoFightTargetFor(actor, player, enemy, stavesExhausted) : action?.target || null
               }
-              setStatus(`${actor.name} acts.`)
+              setStatus(autoFight ? (target ? `${actor.name} auto-targets ${target.name}.` : `${actor.name} auto-fights.`) : `${actor.name} acts.`)
               await resolveActorTurn(actor, player, enemy, target, stavesExhausted)
+              await applyEndOfTurnStatus(actor)
+              clearTurnBuffs(actor)
               pIdx = (pIdx + 1) % player.length
               actions++
             }
@@ -2145,6 +1796,8 @@ ${growLine}</div>`
               nextEnemyMarkerId = actor.id
               renderTeams()
               if (await consumeTurnStatus(actor, enemy, player)) {
+                await applyEndOfTurnStatus(actor)
+                clearTurnBuffs(actor)
                 eIdx = (eIdx + 1) % enemy.length
                 updateNextEnemyMarker(eIdx)
                 renderTeams()
@@ -2155,6 +1808,8 @@ ${growLine}</div>`
               const target = actor.weapon.staff ? (!stavesExhausted && isStatusStaff(actor.weapon) ? chooseStatusStaffTarget(actor, player) : null) : chooseEnemyTarget()
               if (target) setStatus(`${actor.name} targets ${target.name}.`)
               await resolveActorTurn(actor, enemy, player, target, stavesExhausted)
+              await applyEndOfTurnStatus(actor)
+              clearTurnBuffs(actor)
               eIdx = (eIdx + 1) % enemy.length
               updateNextEnemyMarker(eIdx)
               renderTeams()
@@ -2166,10 +1821,12 @@ ${growLine}</div>`
         clearHighlights()
         setStatus('')
         nextEnemyMarkerId = null
-        renderTeams()
         battleRunning = false
+        setAutoFight(false, true)
+        renderTeams()
         if (player.some((x) => x.hp > 0)) {
           logLine(null, `Victory in ${actions} actions. Team fully healed and levels twice.`, 'heal')
+          clearTemporaryBuffs(player)
           advanceTwoLevels(player)
           player.forEach((u) => {
             u.hp = u.maxHp
@@ -2178,6 +1835,12 @@ ${growLine}</div>`
           renderTeams()
           if (battle >= 20) {
             showWin()
+          } else if (bossTierForBattle(battle) === BOSS_TIER_BIOME) {
+            addGold(SHOP_BIOME_BOSS_GOLD)
+            pendingShopAfterReward = true
+            logLine(null, `Biome boss bounty: ${formatGold(SHOP_BIOME_BOSS_GOLD)}.`, 'goldLog')
+            renderTeams()
+            showRewards()
           } else showRewards()
         } else {
           logLine(null, `Defeat on battle ${battle}.`, 'death')
@@ -2187,66 +1850,165 @@ ${growLine}</div>`
       function showRewards(opening = false) {
         awaitingReward = true
         const bossTier = opening ? null : bossTierForBattle(battle)
-        const rewards = makeRewards(bossTier)
+        const rewards = makeRewards(bossTier, opening)
         const title = opening ? 'Choose an opening reward' : 'Choose a reward'
-        let desc = opening
-          ? 'Pick one free reward before battle 1. Weapon rewards equip immediately; stat boosters are consumed immediately.'
-          : 'Pick exactly one. Weapon rewards equip immediately; stat boosters are consumed immediately. No roster swaps.'
-        if (bossTier)
-          desc +=
-            bossTier === BOSS_TIER_SUPER
-              ? ' Super boss weapon rewards are stronger and offer four weapon choices.'
-              : ' Regular boss weapon rewards are rolled from stronger weapons.'
-        let html = `<h2>${title}</h2><div class="small">${desc}</div><div class="rewardGrid">`
-        rewards.forEach((r, i) => {
-          html += `<div class="choice"><div><h4>${r.title}</h4><div>${r.desc}</div></div><button data-i="${i}" class="good">Choose</button></div>`
+        renderRewardSelection(title, rewards)
+      }
+      function renderRewardSelection(title, rewards) {
+        const skipReward = rewards.find((r) => r.type === 'gold')
+        const choiceRewards = rewards.filter((r) => r.type !== 'gold')
+        let html = `<h2>${title}</h2><div class="rewardGrid">`
+        choiceRewards.forEach((r, i) => {
+          const rewardClass = r.item?.tier ? ` reward-${r.item.tier || 'normal'}` : ''
+          html += `<div class="choice${rewardClass}"><div><h4>${r.title}</h4><div>${r.desc}</div></div><button data-i="${i}" class="good">Choose</button></div>`
         })
         html += '</div>'
+        if (skipReward) html += `<div class="rewardSkipWrap"><button data-skip-reward class="rewardSkip">Skip reward: gain ${goldHTML(skipReward.gold)}</button></div>`
         showModal(html)
-        document.querySelectorAll('[data-i]').forEach((btn) => (btn.onclick = () => applyReward(rewards[+btn.dataset.i])))
+        document.querySelectorAll('[data-i]').forEach((btn) => (btn.onclick = () => applyReward(choiceRewards[+btn.dataset.i], () => renderRewardSelection(title, rewards))))
+        const skipBtn = document.querySelector('[data-skip-reward]')
+        if (skipBtn) skipBtn.onclick = () => applyReward(skipReward)
       }
       function weaponSummary(w) {
         const fx = staffEffect(w)
-        if (fx === 'heal') return `staff, Heal ${w.mt}`
-        if (fx === 'fortify') return 'staff, heals all allies by Mag'
-        if (fx === 'sleep' || fx === 'berserk') return `staff, ${statusName(fx)}, Hit ${w.hit}`
-        return `${w.type}, Mt ${w.mt}, Hit ${w.hit}, Wt ${w.wt}, Crit ${w.crit}`
+        const effects = weaponEffectLabels(w)
+        const effectText = effects.length ? `, ${effects.join(', ')}` : ''
+        if (fx === 'heal') return `staff, rank ${w.rank}, Heal ${w.mt}${effectText}`
+        if (fx === 'fortify') return `staff, rank ${w.rank}, heals all allies by Mag${effectText}`
+        if (fx === 'sleep' || fx === 'berserk') return `staff, rank ${w.rank}, ${statusName(fx)}, Hit ${w.hit}${effectText}`
+        return `${w.type}, rank ${w.rank}, Mt ${w.mt}, Hit ${w.hit}, Wt ${w.wt}, Crit ${w.crit}${effectText}`
       }
       function isGoodRewardWeapon(w) {
-        return !w.name.startsWith('Iron') && w.name !== 'Heal Staff'
+        return w.tier !== 'normal'
+      }
+      function rewardsExcludeRare() {
+        return battle < REWARD_RARE_LOCKED_UNTIL_BATTLE
+      }
+      function isNonRareRewardItem(item) {
+        return item.tier !== 'rare'
       }
       function rewardWeaponPool(u, goodOnly = false) {
         const opts = WEAPONS.filter((w) => allowedWeapons(u).includes(w.type))
+        if (rewardsExcludeRare()) return opts.filter(isNonRareRewardItem)
         if (!goodOnly) return opts
         const good = opts.filter(isGoodRewardWeapon)
         return good.length ? good : opts
+      }
+      function fallbackRewardWeaponPool(goodOnly = false) {
+        if (rewardsExcludeRare()) return WEAPONS.filter(isNonRareRewardItem)
+        if (!goodOnly) return WEAPONS
+        const good = WEAPONS.filter(isGoodRewardWeapon)
+        return good.length ? good : WEAPONS
+      }
+      function rewardConsumablePool(goodOnly = false) {
+        if (rewardsExcludeRare()) return CONSUMABLES.filter(isNonRareRewardItem)
+        if (!goodOnly) return CONSUMABLES
+        const good = CONSUMABLES.filter((item) => item.tier !== 'normal')
+        return good.length ? good : CONSUMABLES
+      }
+      function weightedTier(weights) {
+        const total = weights.reduce((sum, [, weight]) => sum + weight, 0)
+        let roll = rnd() * total
+        for (const [tier, weight] of weights) {
+          roll -= weight
+          if (roll <= 0) return tier
+        }
+        return weights[weights.length - 1][0]
+      }
+      function completedRewardFights() {
+        return Math.max(0, battle)
+      }
+      function rewardTierWeights(weightSet, goodOnly = false) {
+        if (goodOnly) return rewardsExcludeRare() ? weightSet.good.filter(([tier]) => tier !== 'rare') : weightSet.good
+        const fights = completedRewardFights()
+        const weights = weightSet.normal.map(([tier, weight]) => {
+          if (tier === 'uncommon') return [tier, weight + fights * 2]
+          if (tier === 'rare') return [tier, weight + fights]
+          return [tier, weight]
+        })
+        return rewardsExcludeRare() ? weights.filter(([tier]) => tier !== 'rare') : weights
+      }
+      function pickRewardWeapon(opts, goodOnly = false) {
+        const weights = rewardTierWeights(WEAPON_TIER_WEIGHTS, goodOnly)
+        for (let i = 0; i < 8; i++) {
+          const tier = weightedTier(weights)
+          const tierOpts = opts.filter((w) => w.tier === tier)
+          if (tierOpts.length) return pick(tierOpts)
+        }
+        return pick(opts)
+      }
+      function pickRewardConsumable(goodOnly = false) {
+        const pool = rewardConsumablePool(goodOnly)
+        const weights = rewardTierWeights(CONSUMABLE_TIER_WEIGHTS, goodOnly)
+        for (let i = 0; i < 8; i++) {
+          const tier = weightedTier(weights)
+          const tierOpts = pool.filter((item) => item.tier === tier)
+          if (tierOpts.length) return cloneConsumable(pick(tierOpts))
+        }
+        return cloneConsumable(pick(pool.length ? pool : CONSUMABLES))
       }
       function weaponReward(goodOnly = false) {
         const candidates = player.filter((u) => u.hp > 0 && rewardWeaponPool(u, goodOnly).length)
         const itemUnit = pick(candidates.length ? candidates : player)
         const opts = rewardWeaponPool(itemUnit, goodOnly)
-        const item = cloneWeapon(pick(opts.length ? opts : WEAPONS))
-        return { type: 'item', title: `Equip ${item.name}`, desc: `Give ${item.name} (${weaponSummary(item)}) to ${itemUnit.name}.`, unit: itemUnit, item }
+        const item = cloneWeapon(pickRewardWeapon(opts.length ? opts : fallbackRewardWeaponPool(goodOnly), goodOnly))
+        const oldWeapon = itemUnit.weapon ? `${itemUnit.weapon.name} (${weaponSummary(itemUnit.weapon)})` : 'nothing'
+        const meta = `<div class="small rewardMeta">${weaponTierLabel(item.tier)} · Replaces ${oldWeapon}</div>`
+        return {
+          type: 'item',
+          title: `Equip ${item.name} to ${itemUnit.name} (CON: ${itemUnit.stats.con})`,
+          desc: `Give ${item.name} (${weaponSummary(item)}).${meta}`,
+          unit: itemUnit,
+          item,
+        }
       }
-      function makeRewards(bossTier = null) {
-        const weaponCount = bossTier === BOSS_TIER_SUPER ? 4 : 2
-        const goodOnly = !!bossTier
+      function firstEmptyConsumableSlot() {
+        return consumables.findIndex((item) => !item)
+      }
+      function consumableInventoryFull() {
+        return firstEmptyConsumableSlot() === -1
+      }
+      function consumableReward(goodOnly = false) {
+        const item = pickRewardConsumable(goodOnly)
+        const slotText = consumableInventoryFull() ? 'Inventory full: choose a slot to replace.' : 'Stored in the first empty consumable slot.'
+        const meta = `<div class="small rewardMeta">${weaponTierLabel(item.tier)} · ${slotText}</div>`
+        return { type: 'consumable', title: `${item.name}`, desc: `Usable: ${consumableSummary(item)}${meta}`, item }
+      }
+      function goldReward(amount = REWARD_SKIP_GOLD) {
+        return {
+          type: 'gold',
+          title: `Skip reward: gain ${formatGold(amount)}`,
+          desc: '',
+          gold: amount,
+        }
+      }
+      function sameReward(a, b) {
+        if (a.type !== b.type) return false
+        if (a.type === 'item') return a.unit === b.unit && a.item.name === b.item.name
+        if (a.type === 'consumable') return a.item.id === b.item.id
+        return false
+      }
+      function makeRewards(bossTier = null, opening = false) {
+        const weaponCount = 2
+        const goodOnly = bossTier === BOSS_TIER_BIOME
+        const allowConsumables = opening || !bossTier
         const weaponRewards = []
         for (let i = 0; i < weaponCount; i++) {
-          let next = weaponReward(goodOnly),
+          let next = allowConsumables && rnd() < CONSUMABLE_REWARD_CHANCE ? consumableReward(goodOnly) : weaponReward(goodOnly),
             guard = 0
-          while (weaponRewards.some((r) => r.unit === next.unit && r.item.name === next.item.name) && guard++ < 20) next = weaponReward(goodOnly)
+          while (weaponRewards.some((r) => sameReward(r, next)) && guard++ < 20)
+            next = allowConsumables && rnd() < CONSUMABLE_REWARD_CHANCE ? consumableReward(goodOnly) : weaponReward(goodOnly)
           weaponRewards.push(next)
         }
         const boost = boostReward()
-        return [...weaponRewards, boost]
+        return opening ? [...weaponRewards, boost] : [...weaponRewards, boost, goldReward()]
       }
       function boostReward() {
         if (Math.random() < 0.22)
-          return { type: 'boost', stat: 'level', amt: 1, title: 'Use Tome of Knowledge', desc: 'Immediately gives a chosen unit +1 level. Promotion and level caps are respected.' }
+          return { type: 'boost', stat: 'level', amt: 1, title: 'Use Tome of Knowledge', desc: 'Immediately gives a chosen unit +1 level. Promotion timing and level caps are respected.' }
         const stat = pick(['hp', 'str', 'skl', 'spd', 'lck', 'def', 'res'])
         const amt = stat === 'hp' ? 7 : stat === 'lck' ? 4 : 2
-        return { type: 'boost', title: `Use ${boosterName(stat)}`, desc: `Immediately grants ${stat.toUpperCase()} +${amt} to a chosen unit.`, stat, amt }
+        return { type: 'boost', title: `${boosterName(stat)}`, desc: `Immediately grants ${stat.toUpperCase()} +${amt} to a chosen unit.`, stat, amt }
       }
       function boosterName(stat) {
         return {
@@ -2260,22 +2022,306 @@ ${growLine}</div>`
           level: 'Tome of Knowledge',
         }[stat]
       }
-      function applyReward(r) {
+      function canApplyBoost(r, u) {
+        if (r.stat === 'level') return !(u.promoted && u.lvl >= 20) && (u.promoted || u.lvl < 20 || promotionUnlockedForPlayers())
+        return u.stats[r.stat] < capStat(u, r.stat)
+      }
+      function applyBoostToUnit(r, u) {
+        if (r.stat === 'level') {
+          const gained = levelUp(u, true)
+          u.hp = u.maxHp
+          return gained ? `${u.name} studied the Tome of Knowledge and gained a level.` : `${u.name} is already at the level cap.`
+        }
+        u.stats[r.stat] = Math.min(capStat(u, r.stat), u.stats[r.stat] + r.amt)
+        if (r.stat === 'hp') {
+          u.maxHp = u.stats.hp
+          u.hp = u.maxHp
+        }
+        return `${u.name} used ${boosterName(r.stat)}.`
+      }
+      function shopWeaponPrice(w) {
+        const rank = String(w.rank || 'E').toUpperCase()
+        return SHOP_WEAPON_PRICES[rank] || SHOP_WEAPON_PRICES.E
+      }
+      function shopConsumablePrice(item) {
+        return SHOP_CONSUMABLE_PRICES[item.tier || 'normal'] || SHOP_CONSUMABLE_PRICES.normal
+      }
+      function shopBoostPrice(r) {
+        return SHOP_BOOST_PRICES[r.stat] || 800
+      }
+      function uniqueShopOffers(count, makeOffer, keyFn) {
+        const offers = [],
+          seen = new Set()
+        let guard = 0
+        while (offers.length < count && guard++ < 100) {
+          const offer = makeOffer()
+          if (!offer) break
+          const key = keyFn(offer)
+          if (seen.has(key)) continue
+          seen.add(key)
+          offers.push(offer)
+        }
+        return offers
+      }
+      function shopWeaponPool() {
+        return WEAPONS.filter((w) => player.some((u) => u.hp > 0 && allowedWeapons(u).includes(w.type)))
+      }
+      function eligibleWeaponUsers(w) {
+        return player.filter((u) => u.hp > 0 && allowedWeapons(u).includes(w.type))
+      }
+      function shopWeaponOffer() {
+        const pool = shopWeaponPool()
+        if (!pool.length) return null
+        const item = cloneWeapon(pickRewardWeapon(pool, false))
+        return {
+          type: 'item',
+          shopKind: 'weapon',
+          title: item.name,
+          desc: weaponSummary(item),
+          item,
+          price: shopWeaponPrice(item),
+        }
+      }
+      function shopConsumableOffer() {
+        const item = pickRewardConsumable(false)
+        return {
+          type: 'consumable',
+          shopKind: 'consumable',
+          title: item.name,
+          desc: consumableSummary(item),
+          item,
+          price: shopConsumablePrice(item),
+        }
+      }
+      function shopBoostOffer() {
+        const boost = boostReward()
+        boost.shopKind = 'boost'
+        boost.price = shopBoostPrice(boost)
+        return boost
+      }
+      function makeShopOffers() {
+        return [
+          ...uniqueShopOffers(5, shopWeaponOffer, (offer) => offer.item.name),
+          ...uniqueShopOffers(3, shopConsumableOffer, (offer) => offer.item.id),
+          ...uniqueShopOffers(3, shopBoostOffer, (offer) => offer.title),
+        ]
+      }
+      function shopOfferClass(offer) {
+        if (offer.type === 'gold') return ' reward-gold'
+        return offer.item?.tier ? ` reward-${offer.item.tier}` : ''
+      }
+      function shopOfferHTML(offer, i) {
+        const sold = !!offer.sold
+        const affordable = gold >= offer.price
+        const buttonLabel = sold ? 'Sold' : `Buy ${goldHTML(offer.price)}`
+        const disabled = sold || !affordable ? ' disabled' : ''
+        const meta = `<div class="small rewardMeta">${goldHTML(offer.price)}</div>`
+        return `<div class="shopItem${shopOfferClass(offer)}"><div><h4>${offer.title}</h4><div class="small">${offer.desc}</div>${meta}</div><button data-shop-buy="${i}" class="good"${disabled}>${buttonLabel}</button></div>`
+      }
+      function renderShop(message = '') {
+        const groups = {
+          weapon: shopOffers.map((offer, i) => ({ offer, i })).filter(({ offer }) => offer.shopKind === 'weapon'),
+          consumable: shopOffers.map((offer, i) => ({ offer, i })).filter(({ offer }) => offer.shopKind === 'consumable'),
+          boost: shopOffers.map((offer, i) => ({ offer, i })).filter(({ offer }) => offer.shopKind === 'boost'),
+        }
+        let html = `<div class="shopHeader"><div><h3>Welcome to the shop. What do you need?</h3></div></div>`
+        if (message) html += `<div class="notice">${message}</div>`
+        html += `<section class="shopSection"><h3>Weapons</h3><div class="shopRow shopWeapons">${groups.weapon.map(({ offer, i }) => shopOfferHTML(offer, i)).join('')}</div></section>`
+        html += `<div class="shopLower"><section class="shopSection"><h3>Consumables</h3><div class="shopRow">${groups.consumable.map(({ offer, i }) => shopOfferHTML(offer, i)).join('')}</div></section>`
+        html += `<section class="shopSection"><h3>Stat Boosters</h3><div class="shopRow">${groups.boost.map(({ offer, i }) => shopOfferHTML(offer, i)).join('')}</div></section></div>`
+        html +=
+          '<div class="row space shopActions"><div class="small">Bought weapons can be equipped to anyone eligible to wield them.</div><button id="leaveShopBtn" class="primary">Leave shop</button></div>'
+        setShopOpen(true)
+        $('shopScreen').innerHTML = html
+        $('shopScreen')
+          .querySelectorAll('[data-shop-buy]')
+          .forEach((btn) => (btn.onclick = () => buyShopOffer(+btn.dataset.shopBuy)))
+        $('leaveShopBtn').onclick = leaveShop
+      }
+      function startShop() {
+        awaitingReward = true
+        shopOffers = makeShopOffers()
+        renderTeams()
+        renderShop(`Current gold: ${goldHTML(gold)}.`)
+      }
+      function leaveShop() {
+        closeModal()
+        awaitingReward = false
+        shopOffers = []
+        setShopOpen(false)
+        logLine(null, `Left the shop with ${formatGold(gold)}.`, 'goldLog')
+        renderTeams()
+        beginNextBattle()
+      }
+      function buyShopOffer(i) {
+        const offer = shopOffers[i]
+        if (!offer || offer.sold) return
+        if (gold < offer.price) {
+          renderShop(`Not enough gold for ${offer.title}.`)
+          return
+        }
+        if (offer.type === 'item') {
+          chooseShopWeaponTarget(i)
+          return
+        }
+        if (offer.type === 'consumable') {
+          if (consumableInventoryFull()) {
+            chooseShopConsumableReplacement(i)
+            return
+          }
+          spendGold(offer.price)
+          storeConsumable(offer.item)
+          offer.sold = true
+          renderShop(`Stored ${offer.item.name}.`)
+          return
+        }
+        if (offer.type === 'boost') {
+          chooseShopBoostTarget(i)
+        }
+      }
+      function chooseShopWeaponTarget(i) {
+        const offer = shopOffers[i],
+          eligible = eligibleWeaponUsers(offer.item)
+        let html = `<h2>${offer.item.name}: choose wielder</h2><div class="small">Cost ${goldHTML(offer.price)}. ${weaponSummary(offer.item)}</div>`
+        eligible.forEach((u, idx) => {
+          const oldWeapon = u.weapon ? `${u.weapon.name} (${weaponSummary(u.weapon)})` : 'nothing'
+          html += `<div class="choice"><div><h4>${u.name} (CON: ${u.stats.con})</h4><div>Replaces ${oldWeapon}</div></div><button data-shop-weapon-target="${idx}" class="good">Equip</button></div>`
+        })
+        html += '<button id="cancelShopWeaponBtn">Cancel</button>'
+        showModal(html)
+        document.querySelectorAll('[data-shop-weapon-target]').forEach(
+          (btn) =>
+            (btn.onclick = () => {
+              const u = eligible[+btn.dataset.shopWeaponTarget]
+              if (!spendGold(offer.price)) {
+                closeModal()
+                renderShop(`Not enough gold for ${offer.item.name}.`)
+                return
+              }
+              u.weapon = cloneWeapon(offer.item)
+              offer.sold = true
+              closeModal()
+              renderTeams()
+              renderShop(`${u.name} equipped ${offer.item.name}.`)
+            })
+        )
+        $('cancelShopWeaponBtn').onclick = closeModal
+      }
+      function chooseShopConsumableReplacement(i) {
+        const offer = shopOffers[i]
+        let html = `<h2>${offer.item.name}: choose slot</h2><div class="small">Cost ${goldHTML(offer.price)}. ${consumableSummary(offer.item)}</div>`
+        consumables.forEach((item, slot) => {
+          html += `<div class="choice"><div><h4>Slot ${slot + 1}: ${item.name}</h4><div>${consumableSummary(item)}</div></div><button data-shop-replace-consumable="${slot}" class="good">Replace</button></div>`
+        })
+        html += '<button id="backToShopBtn">Back</button>'
+        showModal(html)
+        document.querySelectorAll('[data-shop-replace-consumable]').forEach(
+          (btn) =>
+            (btn.onclick = () => {
+              if (!spendGold(offer.price)) {
+                closeModal()
+                renderShop(`Not enough gold for ${offer.item.name}.`)
+                return
+              }
+              storeConsumable(offer.item, +btn.dataset.shopReplaceConsumable)
+              offer.sold = true
+              closeModal()
+              renderShop(`Stored ${offer.item.name}.`)
+            })
+        )
+        $('backToShopBtn').onclick = closeModal
+      }
+      function chooseShopBoostTarget(i) {
+        const offer = shopOffers[i]
+        let html = `<h2>${boosterName(offer.stat)}: choose target</h2><div class="small">Cost ${goldHTML(offer.price)}.</div>`
+        player.forEach((u, idx) => {
+          const before = offer.stat === 'level' ? levelLabel(u) : u.stats[offer.stat]
+          const after = offer.stat === 'level' ? (canApplyBoost(offer, u) ? '+1 level' : levelLabel(u)) : Math.min(capStat(u, offer.stat), u.stats[offer.stat] + offer.amt)
+          const label = offer.stat === 'level' ? 'Level' : offer.stat.toUpperCase()
+          const disabled = canApplyBoost(offer, u) ? '' : ' disabled'
+          html += `<div class="choice"><div>${u.name}: ${label} ${before} -> ${after}</div><button data-shop-boost-target="${idx}"${disabled}>Use</button></div>`
+        })
+        html += '<button id="backToShopBtn">Back</button>'
+        showModal(html)
+        document.querySelectorAll('[data-shop-boost-target]').forEach(
+          (btn) =>
+            (btn.onclick = () => {
+              const u = player[+btn.dataset.shopBoostTarget]
+              if (!canApplyBoost(offer, u)) {
+                closeModal()
+                renderShop(`${u.name} cannot use ${boosterName(offer.stat)}.`)
+                return
+              }
+              if (!spendGold(offer.price)) {
+                closeModal()
+                renderShop(`Not enough gold for ${boosterName(offer.stat)}.`)
+                return
+              }
+              const msg = applyBoostToUnit(offer, u)
+              offer.sold = true
+              closeModal()
+              renderTeams()
+              renderShop(msg)
+            })
+        )
+        $('backToShopBtn').onclick = closeModal
+      }
+      function storeConsumable(item, slot = firstEmptyConsumableSlot()) {
+        const targetSlot = slot >= 0 ? slot : 0
+        consumables[targetSlot] = cloneConsumable(item)
+        renderTeams()
+        return targetSlot
+      }
+      function chooseConsumableReplacement(r, backToRewards = null) {
+        let html = `<h2>${r.item.name}: choose slot</h2><div class="small">${consumableSummary(r.item)}</div>`
+        consumables.forEach((item, i) => {
+          html += `<div class="choice"><div><h4>Slot ${i + 1}: ${item.name}</h4><div>${consumableSummary(item)}</div></div><button data-replace-consumable="${i}" class="good">Replace</button></div>`
+        })
+        if (backToRewards) html += '<button id="backToRewardBtn">Back</button>'
+        showModal(html)
+        document.querySelectorAll('[data-replace-consumable]').forEach(
+          (btn) =>
+            (btn.onclick = () => {
+              storeConsumable(r.item, +btn.dataset.replaceConsumable)
+              closeModal()
+              afterReward(`Stored ${r.item.name}.`)
+            })
+        )
+        if (backToRewards) {
+          const backBtn = $('backToRewardBtn')
+          if (backBtn) backBtn.onclick = backToRewards
+        }
+      }
+      function applyReward(r, backToRewards = null) {
         if (r.type === 'item') {
           r.unit.weapon = r.item
           closeModal()
           afterReward(`${r.unit.name} equipped ${r.item.name}.`)
         }
+        if (r.type === 'consumable') {
+          if (consumableInventoryFull()) {
+            chooseConsumableReplacement(r, backToRewards)
+            return
+          }
+          storeConsumable(r.item)
+          closeModal()
+          afterReward(`Stored ${r.item.name}.`)
+        }
+        if (r.type === 'gold') {
+          addGold(r.gold)
+          closeModal()
+          afterReward(`Took ${formatGold(r.gold)}.`, 'goldLog')
+        }
         if (r.type === 'boost') chooseBoostTarget(r)
       }
       function levelLabel(u) {
-        return `${u.promoted ? 'P' : ''}L${u.lvl}`
+        return `L${u.lvl}`
       }
       function chooseBoostTarget(r) {
         let html = `<h2>${boosterName(r.stat)}: choose target</h2>`
         player.forEach((u, i) => {
           const before = r.stat === 'level' ? levelLabel(u) : u.stats[r.stat]
-          const after = r.stat === 'level' ? (u.promoted && u.lvl >= 20 ? levelLabel(u) : '+1 level') : Math.min(capStat(u, r.stat), u.stats[r.stat] + r.amt)
+          const after = r.stat === 'level' ? (canApplyBoost(r, u) ? '+1 level' : levelLabel(u)) : Math.min(capStat(u, r.stat), u.stats[r.stat] + r.amt)
           const label = r.stat === 'level' ? 'Level' : r.stat.toUpperCase()
           html += `<div class="choice"><div>${u.name}: ${label} ${before} -> ${after}</div><button data-t="${i}">Use</button></div>`
         })
@@ -2301,17 +2347,28 @@ ${growLine}</div>`
             })
         )
       }
-      function afterReward(msg) {
+      function afterReward(msg, cls = 'heal') {
         awaitingReward = false
-        logLine(null, msg, 'heal')
+        logLine(null, msg, cls)
         renderTeams()
+        if (pendingShopAfterReward) {
+          pendingShopAfterReward = false
+          startShop()
+          return
+        }
         beginNextBattle()
       }
+      function currentScore() {
+        return (battle - 1) * 1000 + gold
+      }
+      function scoreHTML() {
+        return `<p>Score: <b>${currentScore()}</b> (${battle - 1} wins × 1000 + ${goldHTML(gold)})</p>`
+      }
       function showWin() {
-        showModal(`<h2>Run complete</h2><p>Your team survived 20 battles! Congratulations!</p><button onclick="location.reload()" class="primary">New run</button>`)
+        showModal(`<h2>Run complete</h2><p>Your team survived 20 battles! Congratulations!</p>${scoreHTML()}<button onclick="location.reload()" class="primary">New run</button>`)
       }
       function showGameOver() {
-        showModal(`<h2>Game over</h2><p>Your roster was wiped out.</p><button onclick="location.reload()" class="primary">Try again</button>`)
+        showModal(`<h2>Game over</h2><p>Your roster was wiped out.</p>${scoreHTML()}<button onclick="location.reload()" class="primary">Try again</button>`)
       }
       function showModal(html) {
         $('modalBody').innerHTML = html
@@ -2322,6 +2379,7 @@ ${growLine}</div>`
         $('modalBody').innerHTML = ''
       }
 
+      biomePlan = makeBiomePlan()
       draftOptions = randomDraftOptions()
       chosen = emptyRosterChoices()
       $('randomPickBtn').onclick = () => {
@@ -2333,8 +2391,15 @@ ${growLine}</div>`
         chosen = emptyRosterChoices()
         renderDraft()
       }
+      $('autoFightBtn').onclick = () => setAutoFight(!autoFight)
       $('startBtn').onclick = startRun
       $('resetBtn').onclick = () => location.reload()
+      document.addEventListener('keydown', (e) => {
+        if (e.shiftKey && e.key.toLowerCase() === 'w') {
+          e.preventDefault()
+          debugWinBattle()
+        }
+      })
       renderDraft()
     </script>
   </body>
