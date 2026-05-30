@@ -14,12 +14,26 @@
         </div>
         <div id="biomeMap" class="biomeMap" aria-label="Biome map"></div>
         <div class="row topBadges">
-          <span class="badge"
+          <span class="badge">Gold <b id="goldLabel" class="goldAmount">0 G</b></span
+          ><span class="badge"
             >Battle <span><span id="battleNo">0</span>/20</span></span
           ><span class="badge"
-            >Roster <span><span id="rosterCount">0</span>/5</span></span
-          ><span class="badge">Gold <b id="goldLabel" class="goldAmount">0 G</b></span
+            >Roster <span><span id="rosterCount">0</span>/5</span> </span
           ><span class="badge">Seed <b id="seedLabel"></b></span>
+          <a
+            class="musicButton"
+            href="https://www.youtube.com/watch?v=yIDBhuYldSk&t=19m58s"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Open music in a new tab"
+            aria-label="Open music in a new tab"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M11 5 6 9H3v6h3l5 4V5Z"></path>
+              <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+              <path d="M18.5 5.5a9 9 0 0 1 0 13"></path>
+            </svg>
+          </a>
         </div>
       </div>
 
@@ -397,7 +411,14 @@
               ...(customPromotedStem ? assetPathVariants('map/blue', customPromotedStem) : []),
               ...assetPathVariants('map/blue', customStem),
             ]
-          : [...assetPathVariants(teamFolder, promotedStem), ...assetPathVariants(teamFolder, stem), ...assetPathVariants('map/blue', promotedStem), ...assetPathVariants('map/blue', stem), ...assetPathVariants('battle', promotedStem), ...assetPathVariants('battle', stem)]
+          : [
+              ...assetPathVariants(teamFolder, promotedStem),
+              ...assetPathVariants(teamFolder, stem),
+              ...assetPathVariants('map/blue', promotedStem),
+              ...assetPathVariants('map/blue', stem),
+              ...assetPathVariants('battle', promotedStem),
+              ...assetPathVariants('battle', stem),
+            ]
         return assetSheet('biomeUnitIcon mapSprite', paths[0], paths.slice(1), fallbackBattle(kind, team, promoted), focusLabel(focus), { spriteWidth: 18, slotHeight: 22 })
       }
 
@@ -414,15 +435,19 @@
         u.displayCls = c.promotesTo
         u.lvl = 1
         u.internalLevel = Math.max(u.internalLevel || 20, 21)
+        if (u.isLeader && !u.isEnemy) {
+          while (currentInternalLevel(u) < 20 + LEADER_PROMOTION_LEVEL) {
+            applyGrowthLevel(u)
+            u.internalLevel = Math.min(40, currentInternalLevel(u) + 1)
+          }
+        }
+        syncDisplayLevel(u)
         u.maxHp = u.stats.hp
         u.hp = Math.min(u.hp, u.maxHp)
         if (showLog) logLine(null, `${u.name} promotes to ${u.displayCls}!`, 'heal')
       }
       window.promote = promote
-      function promotionUnlockedForPlayers() {
-        return battle >= PROMOTION_UNLOCK_AFTER_BATTLE
-      }
-      function promotionUnlockedForEnemies() {
+      function promotionUnlockedForRegularEnemies() {
         return battle > PROMOTION_UNLOCK_AFTER_BATTLE
       }
       function currentInternalLevel(u) {
@@ -458,8 +483,7 @@
       }
       function levelUp(u, showLog = true) {
         if (u.promoted && u.lvl >= 20) return false
-        if (!u.promoted && u.lvl >= 20 && !promotionUnlockedForPlayers()) return false
-        return advanceInternalLevel(u, promotionUnlockedForPlayers(), showLog)
+        return advanceInternalLevel(u, true, showLog)
       }
       window.levelUp = levelUp
       function advanceTwoLevels(units) {
@@ -505,6 +529,13 @@
       }
       function cloneWeapon(w) {
         return { ...w }
+      }
+      function forgeWeapon(w) {
+        if (!w || w.staff) return false
+        w.name += '+'
+        w.mt = (w.mt || 0) + 2
+        w.hit = (w.hit || 0) + 5
+        return true
       }
       function cloneConsumable(item) {
         return item ? { ...item } : null
@@ -569,11 +600,7 @@
         if (!opts.length) return u.weapon
         if (tier === BOSS_TIER_BIOME) {
           const chosen = cloneWeapon(pick(bossWeaponPool(opts, tier)))
-          if (!chosen.staff) {
-            chosen.name = chosen.name.includes('+') ? chosen.name : chosen.name + '+'
-            chosen.mt += 2
-            chosen.hit += 5
-          }
+          forgeWeapon(chosen)
           return chosen
         }
         if (tier === BOSS_TIER_REGULAR) {
@@ -816,12 +843,13 @@
         if (!item) return ''
         return item.desc || ''
       }
-      function consumableTargets(item, team = player) {
+      function consumableTargets(item, team = player, foes = enemy) {
         if (!item) return []
         const living = team.filter((u) => u.hp > 0)
         if (item.effect === 'heal' || item.effect === 'fullHeal') return living.filter((u) => u.hp < u.maxHp)
         if (item.effect === 'restore' || item.effect === 'fullHeal') return living.filter((u) => !!u.status)
         if (item.effect === 'revive') return team.filter((u) => u.hp <= 0)
+        if (item.effect === 'aoeDamage') return foes.filter((u) => u.hp > 0)
         if (item.effect === 'buff' || item.effect === 'turnBuff') {
           return living.filter((u) => u.stats[item.stat] < capStat(u, item.stat))
         }
@@ -1084,6 +1112,27 @@
         logLine(null, `${actor.name} uses Fortify; allies recover ${total} total HP.`, 'heal')
         await sleep(450)
       }
+      async function animateAoeConsumable(actor, targets, item) {
+        clearHighlights()
+        const ae = spriteEl(actor)
+        if (ae) ae.classList.add('active')
+        targets.forEach((t) => spriteEl(t)?.classList.add('target'))
+        await sleep(300)
+        let total = 0
+        const fallen = []
+        targets.forEach((t) => {
+          const damage = Math.min(t.hp, item.amount)
+          t.hp = Math.max(0, t.hp - item.amount)
+          total += damage
+          floatText(t, `-${damage}`, 'damage')
+          updateUnitVisual(t)
+          if (t.hp <= 0) fallen.push(t.name)
+        })
+        renderSideCards()
+        logLine(null, `${actor.name} uses ${item.name}; enemies take ${total} total damage.`, 'hit')
+        fallen.forEach((name) => logLine(null, `${name} falls.`, 'death'))
+        await sleep(450)
+      }
       async function animateConsumable(actor, target, item) {
         clearHighlights()
         const ae = spriteEl(actor),
@@ -1129,6 +1178,12 @@
         if (!targets.length) {
           setStatus(`${item.name} has no valid target right now.`)
           return false
+        }
+        if (item.effect === 'aoeDamage') {
+          await animateAoeConsumable(actor, targets, item)
+          consumables[slot] = null
+          renderTeams()
+          return true
         }
         const target = await selectTarget(actor, targets, `${actor.name} uses ${item.name}: choose an ally.`)
         if (!target) {
@@ -1255,7 +1310,7 @@
             else {
               logLine(
                 null,
-                `${actor.name}${suffix} hits ${target.name} for ${r.damage}${r.crit ? ' CRIT' : ''}. ${target.name} HP ${target.hp}/${target.maxHp}.`,
+                `${actor.name}${suffix}${r.crit ? ' CRITICAL' : ''} hits ${target.name} for ${r.damage}. ${target.name} HP ${target.hp}/${target.maxHp}.`,
                 r.crit ? 'crit' : 'hit'
               )
               if (target.hp <= 0) logLine(null, `${target.name} falls.`, 'death')
@@ -1481,14 +1536,14 @@
         }
         return slots
       }
-      function padCell(v, w = 3) {
+      function padCell(v, w = 2) {
         return String(v).padStart(w, ' ')
       }
       function growthCompareHTML(b) {
         const s = b.stats,
           g = b.growths
-        const baseLine = `Bases   HP ${padCell(s.hp)}  Str ${padCell(s.str)}  Skl ${padCell(s.skl)}  Spd ${padCell(s.spd)}  Lck ${padCell(s.lck)}  Def ${padCell(s.def)}  Res ${padCell(s.res)}`
-        const growLine = `Growths HP ${padCell(g.hp)}% Str ${padCell(g.str)}% Skl ${padCell(g.skl)}% Spd ${padCell(g.spd)}% Lck ${padCell(g.lck)}% Def ${padCell(g.def)}% Res ${padCell(g.res)}%`
+        const baseLine = `Bases   HP ${padCell(s.hp)}   Str ${padCell(s.str)}   Skl ${padCell(s.skl)}   Spd ${padCell(s.spd)}   Lck ${padCell(s.lck)}   Def ${padCell(s.def)}   Res ${padCell(s.res)}`
+        const growLine = `Growths HP ${padCell(g.hp)}%  Str ${padCell(g.str)}%  Skl ${padCell(g.skl)}%  Spd ${padCell(g.spd)}%  Lck ${padCell(g.lck)}%  Def ${padCell(g.def)}%  Res ${padCell(g.res)}%`
         return `<div class="statCompare">${baseLine}
 ${growLine}</div>`
       }
@@ -1557,8 +1612,17 @@ ${growLine}</div>`
         if (eff.length) labels.push([eff.join('/'), ''])
         return `<div class="weaponStats">${labels.map(([k, v]) => `<span><b>${k}</b> ${v}</span>`).join('')}</div>`
       }
-      function statHTML(s) {
-        return ['hp', 'str', 'skl', 'spd', 'lck', 'def', 'res', 'con'].map((k) => `<span><b>${k.toUpperCase()}</b> ${s[k]}</span>`).join('')
+      function statHTML(u) {
+        return ['hp', 'str', 'skl', 'spd', 'lck', 'def', 'res', 'con']
+          .map((k) => {
+            const growth = u.growths[k] == null ? '--' : u.growths[k]
+            return `<span data-stat-value="${u.stats[k]}" data-growth-value="${growth}"><b>${k.toUpperCase()}</b> ${u.stats[k]}</span>`
+          })
+          .join('')
+      }
+      function growthSummaryHTML(u) {
+        const g = u.growths
+        return `<span class="muted">(${['hp', 'str', 'skl', 'spd', 'lck', 'def', 'res'].map((k) => `${k.toUpperCase()} ${g[k]}%`).join(', ')})</span>`
       }
       function unitCard(u) {
         const wt = u.weapon ? ` · ${u.weapon.name}` : ''
@@ -1568,7 +1632,7 @@ ${growLine}</div>`
         const buffs = temporaryBuffLabel(u)
         const buffText = buffs ? ` · ${buffs}` : ''
         const portrait = portraitImgForUnit(u)
-        return `<div class="card unitCard ${u.hp <= 0 ? 'dead' : ''}">${portrait}<div><div class="row space"><div><div class="name">${u.name}</div><div class="class">${u.displayCls} ${levelLabel(u)}${leader}${wt}${status}${buffText}</div></div><span class="pill">AS ${attackSpeed(u)}</span></div><div class="hpbar"><i style="width:${(100 * u.hp) / u.maxHp}%"></i></div><div class="small">HP ${u.hp}/${u.maxHp} · Hit ${u.weapon.staff ? '--' : hitRate(u, { weapon: { type: 'none' }, stats: { lck: 0, spd: 0, con: 99 } })} · Avo ${avoid(u)} · Crit ${u.weapon.staff ? '--' : floor((u.weapon.crit || 0) + u.stats.skl / 2)}</div>${weaponStatHTML(u.weapon)}<div class="stats">${statHTML(u.stats)}</div></div></div>`
+        return `<div class="card unitCard ${u.hp <= 0 ? 'dead' : ''}" data-growth-card><div class="portraitStack">${portrait}<div class="growthModeLabel">Showing growths</div></div><div><div class="row space"><div><div class="name">${u.name}</div><div class="class">${u.displayCls} ${levelLabel(u)}${leader}${wt}${status}${buffText}</div></div><span class="pill">AS ${attackSpeed(u)}</span></div><div class="hpbar"><i style="width:${(100 * u.hp) / u.maxHp}%"></i></div><div class="small">HP ${u.hp}/${u.maxHp} · Hit ${u.weapon.staff ? '--' : hitRate(u, { weapon: { type: 'none' }, stats: { lck: 0, spd: 0, con: 99 } })} · Avo ${avoid(u)} · Crit ${u.weapon.staff ? '--' : floor((u.weapon.crit || 0) + u.stats.skl / 2)}</div>${weaponStatHTML(u.weapon)}<div class="stats">${statHTML(u)}</div></div></div>`
       }
 
       function renderConsumables() {
@@ -1597,6 +1661,29 @@ ${growLine}</div>`
         renderConsumables()
         $('playerTeam').innerHTML = player.map(unitCard).join('')
         $('enemyTeam').innerHTML = enemy.map(unitCard).join('')
+        bindGrowthHoldCards()
+      }
+      function bindGrowthHoldCards() {
+        document.querySelectorAll('[data-growth-card]').forEach((card) => {
+          const setGrowthMode = (show) => {
+            card.classList.toggle('showGrowths', show)
+            card.querySelectorAll('[data-stat-value]').forEach((el) => {
+              const text = show ? el.dataset.growthValue : el.dataset.statValue
+              el.lastChild.textContent = ` ${text}`
+            })
+          }
+          const clear = (e) => {
+            setGrowthMode(false)
+            if (e?.pointerId !== undefined && card.hasPointerCapture?.(e.pointerId)) card.releasePointerCapture(e.pointerId)
+          }
+          card.onpointerdown = (e) => {
+            setGrowthMode(true)
+            card.setPointerCapture?.(e.pointerId)
+          }
+          card.onpointerup = clear
+          card.onpointercancel = clear
+          card.onlostpointercapture = clear
+        })
       }
       function updateNextEnemyMarker(startIndex = 0) {
         const idx = nextLivingIndex(enemy, startIndex)
@@ -1665,8 +1752,9 @@ ${growLine}</div>`
         for (let i = 0; i < 5; i++) {
           const isBossSlot = i === 0 && bossTier
           const b = pickBaseFromPool(pool, enemyFocusForSlot(isBossSlot, bossTier)) || pick(BASES)
-          const internal = clamp(baseInternal + (isBossSlot ? (bossTier === BOSS_TIER_BIOME ? 6 : 4) : 0), 1, 40)
-          const promoted = promotionUnlockedForEnemies() && internal > 20
+          // Bosses have extra levels; normal units have slight variance
+          const internal = clamp(baseInternal + (isBossSlot ? (bossTier === BOSS_TIER_BIOME ? 6 : 4) : rnd() < 0.5 ? rint(3) - 1 : 0), 1, 40)
+          const promoted = (isBossSlot || promotionUnlockedForRegularEnemies()) && internal > 20
           const lvl = promoted ? internal - 20 : internal
           const e = freshFromBase(b, true, lvl, promoted)
           e.lvl = clamp(lvl + Math.ceil(b.startOffset / 2), 1, 20)
@@ -1687,9 +1775,9 @@ ${growLine}</div>`
         const biomePrefix = biome ? `${biome.name} (${biomeEffectLabels(biome).join(', ')}): ` : ''
         const msg =
           bossTier === BOSS_TIER_BIOME
-            ? 'Biome boss fight: slot 1 is +6 levels with a random empowered weapon.'
+            ? 'Biome boss fight: +6 level leader with stronger weapons.'
             : bossTier === BOSS_TIER_REGULAR
-              ? 'Regular boss fight: slot 1 is +4 levels.'
+              ? 'Regular boss fight: +4 level leader.'
               : 'Standard enemy team.'
         logLine(null, `Battle ${battle}: ${biomePrefix}${msg}`, bossTier ? 'crit' : 'hit')
         renderTeams()
@@ -1873,10 +1961,10 @@ ${growLine}</div>`
         const fx = staffEffect(w)
         const effects = weaponEffectLabels(w)
         const effectText = effects.length ? `, ${effects.join(', ')}` : ''
-        if (fx === 'heal') return `staff, rank ${w.rank}, Heal ${w.mt}${effectText}`
-        if (fx === 'fortify') return `staff, rank ${w.rank}, heals all allies by Mag${effectText}`
-        if (fx === 'sleep' || fx === 'berserk') return `staff, rank ${w.rank}, ${statusName(fx)}, Hit ${w.hit}${effectText}`
-        return `${w.type}, rank ${w.rank}, Mt ${w.mt}, Hit ${w.hit}, Wt ${w.wt}, Crit ${w.crit}${effectText}`
+        if (fx === 'heal') return `Staff, Rank ${w.rank}, Heal ${w.mt}${effectText}`
+        if (fx === 'fortify') return `Staff, Rank ${w.rank}, heals all allies by Mag${effectText}`
+        if (fx === 'sleep' || fx === 'berserk') return `Staff, Rank ${w.rank}, ${statusName(fx)}, Hit ${w.hit}${effectText}`
+        return `Rank ${w.rank}, Mt ${w.mt}, Hit ${w.hit}, Wt ${w.wt}, Crit ${w.crit}${effectText}`
       }
       function isGoodRewardWeapon(w) {
         return w.tier !== 'normal'
@@ -1954,9 +2042,11 @@ ${growLine}</div>`
         const item = cloneWeapon(pickRewardWeapon(opts.length ? opts : fallbackRewardWeaponPool(goodOnly), goodOnly))
         const oldWeapon = itemUnit.weapon ? `${itemUnit.weapon.name} (${weaponSummary(itemUnit.weapon)})` : 'nothing'
         const meta = `<div class="small rewardMeta">${weaponTierLabel(item.tier)} · Replaces ${oldWeapon}</div>`
+        const effectiveAttackSpeed = Math.min(0, itemUnit.stats.con - item.wt + (item.speedBonus || 0))
+        const effectiveASSymbol = effectiveAttackSpeed < 0 ? '-' : effectiveAttackSpeed === 0 ? '±' : '+'
         return {
           type: 'item',
-          title: `Equip ${item.name} to ${itemUnit.name} (CON: ${itemUnit.stats.con})`,
+          title: `Equip ${item.name} to ${itemUnit.name} (Con: ${itemUnit.stats.con}, Speed ${effectiveASSymbol}${Math.abs(effectiveAttackSpeed)})`,
           desc: `Give ${item.name} (${weaponSummary(item)}).${meta}`,
           unit: itemUnit,
           item,
@@ -2003,12 +2093,47 @@ ${growLine}</div>`
         const boost = boostReward()
         return opening ? [...weaponRewards, boost] : [...weaponRewards, boost, goldReward()]
       }
-      function boostReward() {
-        if (Math.random() < 0.22)
-          return { type: 'boost', stat: 'level', amt: 1, title: 'Use Tome of Knowledge', desc: 'Immediately gives a chosen unit +1 level. Promotion timing and level caps are respected.' }
-        const stat = pick(['hp', 'str', 'skl', 'spd', 'lck', 'def', 'res'])
-        const amt = stat === 'hp' ? 7 : stat === 'lck' ? 4 : 2
-        return { type: 'boost', title: `${boosterName(stat)}`, desc: `Immediately grants ${stat.toUpperCase()} +${amt} to a chosen unit.`, stat, amt }
+      function boostReward(targeted = true) {
+        const boostStats = ['hp', 'str', 'skl', 'spd', 'lck', 'def', 'res', 'con']
+        let reward
+        if (boostTargetOptions({ stat: 'level' }).length && rnd() < 0.22) reward = levelBoostReward()
+        else {
+          const eligibleStats = boostStats.filter((stat) => boostTargetOptions({ stat }).length)
+          const stat = pick(eligibleStats.length ? eligibleStats : boostStats)
+          const amt = stat === 'hp' ? 7 : stat === 'lck' ? 4 : 2
+          reward = { type: 'boost', title: `${boosterName(stat)}`, desc: `Permanently grants ${stat.toUpperCase()} +${amt} to a chosen unit.`, stat, amt }
+        }
+        return targeted ? targetedBoostReward(reward) : reward
+      }
+      function targetedBoostReward(r) {
+        const targets = boostTargetOptions(r)
+        if (!targets.length) return r
+        const { unit } = pick(targets)
+        return {
+          ...r,
+          unit,
+          title: r.title,
+          desc: boostRewardDescription(r, unit),
+        }
+      }
+      function boostRewardDescription(r, u) {
+        if (r.stat === 'level') {
+          const growths = `<div class="small rewardMeta">Growths ${growthSummaryHTML(u)}</div>`
+          return `Immediately levels up ${u.name} ${levelLabel(u)} -> L${u.lvl + 1}.${growths}`
+        }
+        const label = r.stat.toUpperCase()
+        const before = u.stats[r.stat]
+        const after = Math.min(capStat(u, r.stat), before + r.amt)
+        return `Permanently grants ${label} +${r.amt} to ${u.name} (${before} -> ${after}).`
+      }
+      function levelBoostReward() {
+        return {
+          type: 'boost',
+          stat: 'level',
+          amt: 1,
+          title: 'Tome of Knowledge',
+          desc: 'Immediately gives a chosen unit +1 level.',
+        }
       }
       function boosterName(stat) {
         return {
@@ -2019,12 +2144,16 @@ ${growLine}</div>`
           lck: 'Goddess Icon',
           def: 'Dragonshield',
           res: 'Talisman',
+          con: 'Body Ring',
           level: 'Tome of Knowledge',
         }[stat]
       }
       function canApplyBoost(r, u) {
-        if (r.stat === 'level') return !(u.promoted && u.lvl >= 20) && (u.promoted || u.lvl < 20 || promotionUnlockedForPlayers())
+        if (r.stat === 'level') return !(u.promoted && u.lvl >= 20)
         return u.stats[r.stat] < capStat(u, r.stat)
+      }
+      function boostTargetOptions(r) {
+        return player.map((unit, index) => ({ unit, index })).filter(({ unit }) => canApplyBoost(r, unit))
       }
       function applyBoostToUnit(r, u) {
         if (r.stat === 'level') {
@@ -2094,16 +2223,26 @@ ${growLine}</div>`
         }
       }
       function shopBoostOffer() {
-        const boost = boostReward()
+        const boost = boostReward(false)
         boost.shopKind = 'boost'
         boost.price = shopBoostPrice(boost)
         return boost
+      }
+      function shopForgeOffer() {
+        return {
+          type: 'forge',
+          shopKind: 'forge',
+          title: 'Weapon Forge',
+          desc: 'Upgrade one equipped weapon: Mt +2, Hit +5, and add + to its name.',
+          price: SHOP_FORGE_PRICE,
+        }
       }
       function makeShopOffers() {
         return [
           ...uniqueShopOffers(5, shopWeaponOffer, (offer) => offer.item.name),
           ...uniqueShopOffers(3, shopConsumableOffer, (offer) => offer.item.id),
           ...uniqueShopOffers(3, shopBoostOffer, (offer) => offer.title),
+          shopForgeOffer(),
         ]
       }
       function shopOfferClass(offer) {
@@ -2113,8 +2252,10 @@ ${growLine}</div>`
       function shopOfferHTML(offer, i) {
         const sold = !!offer.sold
         const affordable = gold >= offer.price
-        const buttonLabel = sold ? 'Sold' : `Buy ${goldHTML(offer.price)}`
-        const disabled = sold || !affordable ? ' disabled' : ''
+        const unavailable = offer.type === 'forge' && !forgeTargets().length
+        const action = offer.type === 'forge' ? 'Forge' : 'Buy'
+        const buttonLabel = sold ? 'Sold' : `${action} ${goldHTML(offer.price)}`
+        const disabled = sold || !affordable || unavailable ? ' disabled' : ''
         const meta = `<div class="small rewardMeta">${goldHTML(offer.price)}</div>`
         return `<div class="shopItem${shopOfferClass(offer)}"><div><h4>${offer.title}</h4><div class="small">${offer.desc}</div>${meta}</div><button data-shop-buy="${i}" class="good"${disabled}>${buttonLabel}</button></div>`
       }
@@ -2123,10 +2264,12 @@ ${growLine}</div>`
           weapon: shopOffers.map((offer, i) => ({ offer, i })).filter(({ offer }) => offer.shopKind === 'weapon'),
           consumable: shopOffers.map((offer, i) => ({ offer, i })).filter(({ offer }) => offer.shopKind === 'consumable'),
           boost: shopOffers.map((offer, i) => ({ offer, i })).filter(({ offer }) => offer.shopKind === 'boost'),
+          forge: shopOffers.map((offer, i) => ({ offer, i })).filter(({ offer }) => offer.shopKind === 'forge'),
         }
         let html = `<div class="shopHeader"><div><h3>Welcome to the shop. What do you need?</h3></div></div>`
         if (message) html += `<div class="notice">${message}</div>`
         html += `<section class="shopSection"><h3>Weapons</h3><div class="shopRow shopWeapons">${groups.weapon.map(({ offer, i }) => shopOfferHTML(offer, i)).join('')}</div></section>`
+        html += `<section class="shopSection"><h3>Forge</h3><div class="shopRow">${groups.forge.map(({ offer, i }) => shopOfferHTML(offer, i)).join('')}</div></section>`
         html += `<div class="shopLower"><section class="shopSection"><h3>Consumables</h3><div class="shopRow">${groups.consumable.map(({ offer, i }) => shopOfferHTML(offer, i)).join('')}</div></section>`
         html += `<section class="shopSection"><h3>Stat Boosters</h3><div class="shopRow">${groups.boost.map(({ offer, i }) => shopOfferHTML(offer, i)).join('')}</div></section></div>`
         html +=
@@ -2164,6 +2307,10 @@ ${growLine}</div>`
           chooseShopWeaponTarget(i)
           return
         }
+        if (offer.type === 'forge') {
+          chooseShopForgeTarget(i)
+          return
+        }
         if (offer.type === 'consumable') {
           if (consumableInventoryFull()) {
             chooseShopConsumableReplacement(i)
@@ -2178,6 +2325,52 @@ ${growLine}</div>`
         if (offer.type === 'boost') {
           chooseShopBoostTarget(i)
         }
+      }
+      function forgeTargets() {
+        return player.filter((u) => u.weapon && !u.weapon.staff)
+      }
+      function forgePreview(w) {
+        const preview = cloneWeapon(w)
+        forgeWeapon(preview)
+        return preview
+      }
+      function chooseShopForgeTarget(i) {
+        const offer = shopOffers[i]
+        const eligible = forgeTargets()
+        if (!eligible.length) {
+          renderShop('No eligible equipped weapon to forge.')
+          return
+        }
+        let html = `<h2>Weapon Forge: choose weapon</h2><div class="small">Cost ${goldHTML(offer.price)}. Upgrades Mt +2 and Hit +5.</div>`
+        eligible.forEach((u, idx) => {
+          const preview = forgePreview(u.weapon)
+          html += `<div class="choice"><div><h4>${u.name}: ${u.weapon.name} -> ${preview.name}</h4><div>${weaponSummary(u.weapon)} -> ${weaponSummary(preview)}</div></div><button data-shop-forge-target="${idx}" class="good">Forge</button></div>`
+        })
+        html += '<button id="cancelShopForgeBtn">Cancel</button>'
+        showModal(html)
+        document.querySelectorAll('[data-shop-forge-target]').forEach(
+          (btn) =>
+            (btn.onclick = () => {
+              const u = eligible[+btn.dataset.shopForgeTarget]
+              if (!u?.weapon || u.weapon.staff) {
+                closeModal()
+                renderShop('That weapon cannot be forged.')
+                return
+              }
+              if (!spendGold(offer.price)) {
+                closeModal()
+                renderShop('Not enough gold for the weapon forge.')
+                return
+              }
+              const oldName = u.weapon.name
+              forgeWeapon(u.weapon)
+              offer.sold = true
+              closeModal()
+              renderTeams()
+              renderShop(`${u.name}'s ${oldName} was forged into ${u.weapon.name}.`)
+            })
+        )
+        $('cancelShopForgeBtn').onclick = closeModal
       }
       function chooseShopWeaponTarget(i) {
         const offer = shopOffers[i],
@@ -2233,13 +2426,19 @@ ${growLine}</div>`
       }
       function chooseShopBoostTarget(i) {
         const offer = shopOffers[i]
+        const targets = boostTargetOptions(offer)
+        if (!targets.length) {
+          closeModal()
+          renderShop(`No eligible target for ${boosterName(offer.stat)}.`)
+          return
+        }
         let html = `<h2>${boosterName(offer.stat)}: choose target</h2><div class="small">Cost ${goldHTML(offer.price)}.</div>`
-        player.forEach((u, idx) => {
+        targets.forEach(({ unit: u, index: idx }) => {
           const before = offer.stat === 'level' ? levelLabel(u) : u.stats[offer.stat]
           const after = offer.stat === 'level' ? (canApplyBoost(offer, u) ? '+1 level' : levelLabel(u)) : Math.min(capStat(u, offer.stat), u.stats[offer.stat] + offer.amt)
           const label = offer.stat === 'level' ? 'Level' : offer.stat.toUpperCase()
-          const disabled = canApplyBoost(offer, u) ? '' : ' disabled'
-          html += `<div class="choice"><div>${u.name}: ${label} ${before} -> ${after}</div><button data-shop-boost-target="${idx}"${disabled}>Use</button></div>`
+          const growths = offer.stat === 'level' ? ` ${growthSummaryHTML(u)}` : ''
+          html += `<div class="choice"><div>${u.name}: ${label} ${before} -> ${after}${growths}</div><button data-shop-boost-target="${idx}">Use</button></div>`
         })
         html += '<button id="backToShopBtn">Back</button>'
         showModal(html)
@@ -2312,38 +2511,54 @@ ${growLine}</div>`
           closeModal()
           afterReward(`Took ${formatGold(r.gold)}.`, 'goldLog')
         }
-        if (r.type === 'boost') chooseBoostTarget(r)
+        if (r.type === 'boost') {
+          if (r.unit) {
+            if (!canApplyBoost(r, r.unit)) {
+              if (backToRewards) backToRewards()
+              return
+            }
+            const msg = applyBoostToUnit(r, r.unit)
+            closeModal()
+            afterReward(msg)
+            return
+          }
+          chooseBoostTarget(r, backToRewards)
+        }
       }
       function levelLabel(u) {
         return `L${u.lvl}`
       }
-      function chooseBoostTarget(r) {
+      function chooseBoostTarget(r, backToRewards = null) {
+        const targets = boostTargetOptions(r)
+        if (!targets.length) {
+          if (backToRewards) {
+            backToRewards()
+            return
+          }
+          showModal(`<h2>${boosterName(r.stat)}: choose target</h2><p>No eligible targets.</p>`)
+          return
+        }
         let html = `<h2>${boosterName(r.stat)}: choose target</h2>`
-        player.forEach((u, i) => {
+        targets.forEach(({ unit: u, index: i }) => {
           const before = r.stat === 'level' ? levelLabel(u) : u.stats[r.stat]
-          const after = r.stat === 'level' ? (canApplyBoost(r, u) ? '+1 level' : levelLabel(u)) : Math.min(capStat(u, r.stat), u.stats[r.stat] + r.amt)
+          const after = r.stat === 'level' ? (canApplyBoost(r, u) ? `L${u.lvl + 1}` : levelLabel(u)) : Math.min(capStat(u, r.stat), u.stats[r.stat] + r.amt)
           const label = r.stat === 'level' ? 'Level' : r.stat.toUpperCase()
-          html += `<div class="choice"><div>${u.name}: ${label} ${before} -> ${after}</div><button data-t="${i}">Use</button></div>`
+          const growths = r.stat === 'level' ? ` ${growthSummaryHTML(u)}` : ''
+          html += `<div class="choice"><div>${u.name}: ${label} ${before} -> ${after}${growths}</div><button data-t="${i}">Use</button></div>`
         })
         showModal(html)
         document.querySelectorAll('[data-t]').forEach(
           (btn) =>
             (btn.onclick = () => {
               const u = player[+btn.dataset.t]
-              if (r.stat === 'level') {
-                const gained = levelUp(u, true)
-                u.hp = u.maxHp
+              if (!canApplyBoost(r, u)) {
                 closeModal()
-                afterReward(gained ? `${u.name} studied the Tome of Knowledge and gained a level.` : `${u.name} is already at the level cap.`)
+                if (backToRewards) backToRewards()
                 return
               }
-              u.stats[r.stat] = Math.min(capStat(u, r.stat), u.stats[r.stat] + r.amt)
-              if (r.stat === 'hp') {
-                u.maxHp = u.stats.hp
-                u.hp = u.maxHp
-              }
+              const msg = applyBoostToUnit(r, u)
               closeModal()
-              afterReward(`${u.name} used ${boosterName(r.stat)}.`)
+              afterReward(msg)
             })
         )
       }
