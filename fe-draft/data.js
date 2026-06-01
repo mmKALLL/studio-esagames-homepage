@@ -325,6 +325,88 @@ const CONSUMABLES = [
   { id: 'guard_potion', name: 'Ninis\'s Grace', tier: 'uncommon', effect: 'turnBuff', stat: 'def', amount: 10, desc: 'Grants Def +10 until end of target\'s next turn.' },
 ]
 
+// Candidate held-item data. These are not wired into gameplay yet.
+// Intended shape: each unit can equip one held item, usually from reward/shop pools.
+// prettier-ignore
+const HELD_ITEMS = [
+  // Auto-consumable conversions
+  { id: 'vulnerary_pouch', name: 'Vulnerary Pouch', tier: 'normal', family: 'autoConsumable', trigger: 'hpBelowHalf', effect: 'autoHeal', amount: 10, uses: 1, desc: 'Once per battle, heals 10 HP when holder falls below 50% HP.' },
+  { id: 'concoction_pouch', name: 'Concoction Pouch', tier: 'uncommon', family: 'autoConsumable', trigger: 'hpBelowHalf', effect: 'autoHeal', amount: 20, uses: 1, desc: 'Once per battle, heals 20 HP when holder falls below 50% HP.' },
+  { id: 'elixir_pouch', name: 'Elixir Pouch', tier: 'rare', family: 'autoConsumable', trigger: 'hpBelowQuarter', effect: 'autoFullHeal', uses: 1, desc: 'Once per battle, fully heals when holder falls below 25% HP.' },
+  { id: 'restore_charm', name: 'Restore Charm', tier: 'uncommon', family: 'autoConsumable', trigger: 'statusApplied', effect: 'clearStatus', uses: 1, desc: 'Once per battle, immediately clears Sleep or Berserk.' },
+  { id: 'antitoxin_charm', name: 'Antitoxin Charm', tier: 'normal', family: 'protection', effect: 'poisonImmune', desc: 'Prevents poison.' },
+  { id: 'dragon_tears_charm', name: 'Dragon Tears Charm', tier: 'rare', family: 'autoConsumable', trigger: 'lethalDamage', effect: 'revive', healPercent: 50, uses: 1, desc: 'Once per battle, revives holder at half HP when defeated.' },
+  { id: 'geosphere_shard', name: 'Geosphere Shard', tier: 'rare', family: 'autoConsumable', trigger: 'battleStart', effect: 'enemyAoeDamage', amount: 5, uses: 1, desc: 'At battle start, deals 5 damage to all enemies.' },
+
+  // Shields and guards
+  { id: 'leather_shield', name: 'Leather Shield', tier: 'normal', family: 'shield', stats: { def: 1 }, speedPenalty: 1, desc: 'Def +1, but effective speed -1.' },
+  { id: 'iron_shield', name: 'Iron Shield', tier: 'normal', family: 'shield', stats: { def: 2 }, speedPenalty: 2, desc: 'Def +2, but effective speed -2.' },
+  { id: 'steel_shield', name: 'Steel Shield', tier: 'uncommon', family: 'shield', stats: { def: 4 }, speedPenalty: 3, desc: 'Def +4, but effective speed -3.' },
+  { id: 'silver_shield', name: 'Silver Shield', tier: 'rare', family: 'shield', stats: { def: 5 }, speedPenalty: 2, desc: 'Def +5, but effective speed -2.' },
+  { id: 'hexlock_shield', name: 'Hexlock Shield', tier: 'uncommon', family: 'shield', stats: { res: 4 }, speedPenalty: 2, desc: 'Res +4, but effective speed -2.' },
+  { id: 'iron_rune', name: 'Iron Rune', tier: 'uncommon', family: 'guard', effect: 'critImmune', desc: 'Nullifies incoming critical hits.' },
+  { id: 'hoplon_guard', name: 'Hoplon Guard', tier: 'uncommon', family: 'guard', effect: 'critImmune', stats: { lck: 2 }, desc: 'Nullifies incoming critical hits and grants Lck +2.' },
+  { id: 'delphi_shield', name: 'Delphi Shield', tier: 'uncommon', family: 'guard', effect: 'flyingEffectiveImmune', desc: 'Negates bonus damage against flying units.' },
+  { id: 'iotes_shield', name: "Iote's Shield", tier: 'uncommon', family: 'guard', effect: 'flyingEffectiveImmune', stats: { def: 1 }, desc: 'Negates bonus damage against flying units and grants Def +1.' },
+  { id: 'svalinn_shield', name: 'Svalinn Shield', tier: 'uncommon', family: 'guard', effect: 'armoredEffectiveImmune', desc: 'Negates bonus damage against armored units.' },
+  { id: 'dragon_mail', name: 'Dragon Mail', tier: 'uncommon', family: 'guard', effect: 'dragonEffectiveImmune', desc: 'Negates bonus damage against dragon units.' },
+  { id: 'full_guard', name: 'Full Guard', tier: 'rare', family: 'guard', effect: 'effectiveImmune', desc: 'Negates all bonus damage from effective weapons.' },
+  { id: 'aegis_shield', name: 'Aegis Shield', tier: 'rare', family: 'shield', stats: { def: 3, res: 3 }, critAvoid: 20, desc: 'Def +3, Res +3, and critical avoid +20.' },
+  { id: 'ochain_shield', name: 'Ochain Shield', tier: 'rare', family: 'shield', stats: { def: 4, res: 2 }, trigger: 'turnStart', effect: 'regenPercent', amount: 10, desc: 'Def +4, Res +2, and restores 10% max HP at turn start.' },
+  { id: 'seiros_shield', name: 'Seiros Shield', tier: 'rare', family: 'shield', stats: { def: 5, res: 5 }, trigger: 'turnStart', effect: 'regenFlat', amount: 5, desc: 'Def +5, Res +5, and restores 5 HP at turn start.' },
+
+  // Rings and passive stat items
+  { id: 'power_ring', name: 'Power Ring', tier: 'normal', family: 'ring', stats: { str: 2 }, desc: 'STR/MAG +2.' },
+  { id: 'skill_ring', name: 'Skill Ring', tier: 'normal', family: 'ring', stats: { skl: 3 }, desc: 'Skl +3.' },
+  { id: 'speed_ring', name: 'Speed Ring', tier: 'normal', family: 'ring', stats: { spd: 2 }, desc: 'Spd +2.' },
+  { id: 'luck_ring', name: 'Luck Ring', tier: 'normal', family: 'ring', stats: { lck: 4 }, desc: 'Lck +4.' },
+  { id: 'shield_ring', name: 'Shield Ring', tier: 'normal', family: 'ring', stats: { def: 2 }, desc: 'Def +2.' },
+  { id: 'barrier_ring', name: 'Barrier Ring', tier: 'normal', family: 'ring', stats: { res: 2 }, desc: 'Res +2.' },
+  { id: 'body_ring_held', name: 'Body Ring', tier: 'uncommon', family: 'ring', stats: { con: 2 }, desc: 'Con +2 while held.' },
+  { id: 'life_ring', name: 'Life Ring', tier: 'uncommon', family: 'ring', trigger: 'turnStart', effect: 'regenFlat', amount: 5, desc: 'Restores 5 HP at turn start.' },
+  { id: 'prayer_ring', name: 'Prayer Ring', tier: 'rare', family: 'ring', trigger: 'lethalDamage', effect: 'miracle', uses: 1, desc: 'Once per battle, survives lethal damage at 1 HP.' },
+  { id: 'pursuit_ring', name: 'Pursuit Ring', tier: 'rare', family: 'ring', effect: 'doubleThresholdDown', amount: 2, desc: 'Holder doubles with 2 less speed advantage.' },
+
+  // Combat charms and scrolls
+  { id: 'accuracy_ring', name: 'Accuracy Ring', tier: 'normal', family: 'charm', hit: 10, desc: 'Hit +10.' },
+  { id: 'evasion_ring', name: 'Evasion Ring', tier: 'normal', family: 'charm', avoid: 10, desc: 'Avoid +10.' },
+  { id: 'critical_ring', name: 'Critical Ring', tier: 'uncommon', family: 'charm', crit: 10, desc: 'Crit +10.' },
+  { id: 'guard_charm', name: 'Guard Charm', tier: 'normal', family: 'charm', damageTakenFlat: -1, desc: 'Reduces all incoming combat damage by 1.' },
+  { id: 'wrath_scroll', name: 'Wrath Scroll', tier: 'uncommon', family: 'scroll', trigger: 'hpBelowHalf', crit: 20, desc: 'Crit +20 while below 50% HP.' },
+  { id: 'vantage_scroll', name: 'Vantage Scroll', tier: 'uncommon', family: 'scroll', trigger: 'hpBelowHalf', effect: 'counterFirst', desc: 'When below 50% HP, counters before the attacker.' },
+  { id: 'adept_scroll', name: 'Adept Scroll', tier: 'uncommon', family: 'scroll', trigger: 'afterHit', effect: 'extraStrikeChance', chance: 20, desc: '20% chance to immediately strike again after a hit.' },
+  { id: 'nihil_scroll', name: 'Nihil Scroll', tier: 'rare', family: 'scroll', effect: 'negateEnemySpecials', desc: 'Negates enemy brave, crit, poison, drain, and effective effects against holder.' },
+  { id: 'renewal_scroll', name: 'Renewal Scroll', tier: 'rare', family: 'scroll', trigger: 'turnStart', effect: 'regenPercent', amount: 15, desc: 'Restores 15% max HP at turn start.' },
+  { id: 'resolve_scroll', name: 'Resolve Scroll', tier: 'rare', family: 'scroll', trigger: 'hpBelowHalf', stats: { skl: 4, spd: 4 }, desc: 'Skl +4 and Spd +4 while below 50% HP.' },
+  { id: 'parity_scroll', name: 'Parity Scroll', tier: 'rare', family: 'scroll', trigger: 'combatStart', effect: 'ignoreBothHeldItems', desc: 'During holder combat, both combatants ignore held-item effects.' },
+
+  // Weapon-style modifiers
+  { id: 'poison_stone', name: 'Poison Stone', tier: 'uncommon', family: 'charm', effect: 'weaponPoison', desc: 'Holder poisons enemies on weapon hit.' },
+  { id: 'drain_stone', name: 'Drain Stone', tier: 'rare', family: 'charm', effect: 'weaponDrainPercent', amount: 25, desc: 'Holder heals for 25% of damage dealt.' },
+  { id: 'pierce_badge', name: 'Pierce Badge', tier: 'rare', family: 'badge', trigger: 'attack', effect: 'defPierceChance', chance: 20, desc: '20% chance for attacks to ignore Def or Res.' },
+  { id: 'breaker_badge', name: 'Breaker Badge', tier: 'uncommon', family: 'badge', trigger: 'weaponTriangleAdvantage', hit: 15, avoid: 15, desc: 'Hit +15 and Avoid +15 when holder has weapon triangle advantage.' },
+  { id: 'reaver_badge', name: 'Reaver Badge', tier: 'uncommon', family: 'badge', effect: 'reverseTriangle', desc: 'Reverses holder weapon triangle matchups.' },
+  { id: 'brave_badge', name: 'Brave Badge', tier: 'rare', family: 'badge', trigger: 'firstAttack', effect: 'extraFirstStrike', uses: 1, desc: 'Once per battle, holder makes one extra strike on their first attack.' },
+
+  // Economy and long-term planning
+  { id: 'silver_card', name: 'Silver Card', tier: 'rare', family: 'economy', effect: 'shopDiscount', amount: 20, desc: 'Shop prices are 20% lower while held by a living ally.' },
+  { id: 'member_card', name: 'Member Card', tier: 'uncommon', family: 'economy', effect: 'extraShopOffer', amount: 1, desc: 'Shops offer one extra random item while held by a living ally.' },
+  { id: 'bargain_band', name: 'Bargain Band', tier: 'uncommon', family: 'economy', effect: 'forgeDiscount', amount: 25, desc: 'Forge costs are 25% lower while held by a living ally.' },
+  { id: 'white_gem', name: 'White Gem', tier: 'rare', family: 'economy', trigger: 'skipReward', effect: 'bonusGoldPercent', amount: 50, desc: 'Skip reward gold is increased by 50% while held by a living ally.' },
+  { id: 'knowledge_gem', name: 'Knowledge Gem', tier: 'uncommon', family: 'growth', trigger: 'levelUp', effect: 'extraGrowthRoll', chance: 25, desc: '25% chance to gain one extra successful growth stat on level up.' },
+  { id: 'paragon_band', name: 'Paragon Band', tier: 'rare', family: 'growth', trigger: 'victoryLevelUp', effect: 'extraLevelChance', chance: 25, desc: '25% chance to gain one extra level after battle victories.' },
+
+  // FE9-style growth bands, adapted for this roguelike
+  { id: 'fighter_band', name: 'Fighter Band', tier: 'normal', family: 'growthBand', growths: { hp: 10, str: 5 }, desc: 'While held, HP growth +10 and STR/MAG growth +5.' },
+  { id: 'knight_band', name: 'Knight Band', tier: 'normal', family: 'growthBand', stats: { def: 1 }, growths: { def: 10 }, desc: 'Def +1, and Def growth +10.' },
+  { id: 'mage_band', name: 'Mage Band', tier: 'normal', family: 'growthBand', growths: { str: 10, res: 5 }, desc: 'STR/MAG growth +10 and Res growth +5.' },
+  { id: 'pegasus_band', name: 'Pegasus Band', tier: 'normal', family: 'growthBand', growths: { spd: 10, res: 5 }, desc: 'Spd growth +10 and Res growth +5.' },
+  { id: 'thief_band', name: 'Thief Band', tier: 'normal', family: 'growthBand', stats: { spd: 1 }, growths: { spd: 5, lck: 10 }, desc: 'Spd +1, Spd growth +5, and Lck growth +10.' },
+  { id: 'archer_band', name: 'Archer Band', tier: 'normal', family: 'growthBand', hit: 5, growths: { skl: 10 }, desc: 'Hit +5 and Skl growth +10.' },
+  { id: 'wyvern_band', name: 'Wyvern Band', tier: 'uncommon', family: 'growthBand', stats: { str: 1, def: 1 }, growths: { hp: 5, str: 5, def: 5 }, desc: 'STR/MAG +1, Def +1, and modest bulk growth bonuses.' },
+  { id: 'hero_band', name: 'Hero Band', tier: 'rare', family: 'growthBand', stats: { skl: 1, spd: 1 }, growths: { str: 5, skl: 5, spd: 5, def: 5 }, desc: 'Skl +1, Spd +1, and broad combat growth bonuses.' },
+]
+
 // prettier-ignore
 const BASES = [
   // FE7-inspired roster pool. Stats/growths are close enough for prototype balance, not exact ROM data. Unit data.
@@ -332,8 +414,8 @@ U('Lyn','Lord','sword',         {bTotal:27,hp:16,str:4,skl:7,spd:9,lck:5,def:2,r
 U('Eliwood','Lord','sword',     {bTotal:29,hp:18,str:5,skl:5,spd:7,lck:7,def:5,res:0,con:7},    {hp:80,str:45,skl:50,spd:40,lck:45,def:30,res:35,gTotal:325},'red'),
 U('Hector','Lord','axe',        {bTotal:27,hp:19,str:7,skl:4,spd:5,lck:3,def:8,res:0,con:13},   {hp:90,str:60,skl:45,spd:35,lck:30,def:50,res:25,gTotal:335},'green'),
 
-U('Raven','Mercenary','sword',  {bTotal:40,hp:25,str:8,skl:11,spd:13,lck:2,def:5,res:1,con:8},  {hp:85,str:55,skl:40,spd:45,lck:35,def:25,res:15,gTotal:300},'purple'),
-U('Harken','Mercenary','sword', {bTotal:41,hp:24,str:9,skl:9,spd:10,lck:4,def:7,res:2,con:11},  {hp:80,str:45,skl:45,spd:35,lck:35,def:30,res:25,gTotal:295},'blue'),
+U('Raven','Mercenary','sword',  {bTotal:37,hp:25,str:7,skl:10,spd:12,lck:2,def:5,res:1,con:8},  {hp:85,str:55,skl:40,spd:45,lck:35,def:25,res:15,gTotal:300},'purple'),
+U('Harken','Mercenary','sword', {bTotal:39,hp:24,str:9,skl:9,spd:8,lck:4,def:7,res:2,con:11},  {hp:80,str:35,skl:40,spd:40,lck:35,def:30,res:25,gTotal:275},'blue'),
 
 U('Guy','Myrmidon','sword',     {bTotal:38,hp:21,str:6,skl:11,spd:11,lck:5,def:5,res:0,con:5},  {hp:75,str:30,skl:50,spd:70,lck:45,def:15,res:25,gTotal:310},'gold'),
 U('Karel','Myrmidon','sword',   {bTotal:43,hp:22,str:7,skl:12,spd:13,lck:6,def:4,res:1,con:7},  {hp:70,str:35,skl:55,spd:55,lck:30,def:15,res:20,gTotal:280},'red'),
@@ -343,8 +425,8 @@ U('Matthew','Thief','sword',    {bTotal:26,hp:18,str:4,skl:6,spd:10,lck:3,def:3,
 U('Legault','Thief','sword',    {bTotal:37,hp:20,str:6,skl:8,spd:10,lck:6,def:5,res:2,con:9},   {hp:60,str:25,skl:45,spd:60,lck:60,def:25,res:25,gTotal:300},'purple',2),
 U('Jaffar','Thief','sword',     {bTotal:46,hp:21,str:8,skl:12,spd:12,lck:5,def:6,res:3,con:8},  {hp:65,str:20,skl:45,spd:35,lck:15,def:20,res:20,gTotal:220},'red',4),
 
-U('Oswin','Knight','lance',     {bTotal:46,hp:28,str:13,skl:9,spd:5,lck:3,def:13,res:3,con:14}, {hp:90,str:40,skl:30,spd:30,lck:35,def:55,res:30,gTotal:310},'blue'),
-U('Wallace','Knight','lance',   {bTotal:41,hp:28,str:10,skl:6,spd:5,lck:6,def:12,res:2,con:13}, {hp:70,str:45,skl:35,spd:20,lck:30,def:35,res:35,gTotal:270},'blue',4),
+U('Oswin','Knight','lance',     {bTotal:37,hp:24,str:11,skl:8,spd:4,lck:3,def:9,res:2,con:14}, {hp:90,str:40,skl:30,spd:30,lck:35,def:55,res:30,gTotal:310},'blue'),
+U('Wallace','Knight','lance',   {bTotal:42,hp:26,str:10,skl:6,spd:5,lck:8,def:12,res:1,con:13}, {hp:70,str:45,skl:35,spd:20,lck:30,def:35,res:35,gTotal:270},'blue',4),
 U('Amelia','Knight','lance',    {bTotal:29,hp:18,str:5,skl:4,spd:4,lck:6,def:7,res:3,con:9},    {hp:60,str:40,skl:45,spd:40,lck:50,def:30,res:15,gTotal:280},'red'),
 
 U('Sain','Cavalier','lance',    {bTotal:28,hp:20,str:8,skl:4,spd:6,lck:4,def:6,res:0,con:9},    {hp:80,str:60,skl:35,spd:40,lck:35,def:20,res:20,gTotal:290},'green'),
@@ -359,7 +441,6 @@ U('Farina','Pegasus','lance',   {bTotal:41,hp:18,str:7,skl:8,spd:9,lck:7,def:5,r
 
 U('Heath','Wyvern','lance',     {bTotal:40,hp:24,str:10,skl:7,spd:7,lck:7,def:8,res:1,con:9},   {hp:80,str:50,skl:50,spd:45,lck:20,def:30,res:20,gTotal:295},'red'),
 U('Vaida','Wyvern','lance',     {bTotal:43,hp:27,str:11,skl:8,spd:8,lck:4,def:10,res:2,con:12}, {hp:80,str:45,skl:35,spd:30,lck:25,def:25,res:15,gTotal:255},'purple',2),
-U('Haar','Wyvern','axe',        {bTotal:42,hp:28,str:12,skl:9,spd:6,lck:3,def:10,res:2,con:13}, {hp:80,str:45,skl:45,spd:35,lck:15,def:35,res:10,gTotal:265},'gold',2),
 U('Cormag','Wyvern','lance',    {bTotal:37,hp:22,str:10,skl:5,spd:6,lck:3,def:11,res:2,con:11}, {hp:85,str:55,skl:40,spd:45,lck:35,def:25,res:15,gTotal:300},'blue',2),
 U('Melady','Wyvern','lance',    {bTotal:43,hp:25,str:8,skl:11,spd:7,lck:3,def:11,res:3,con:9},  {hp:75,str:50,skl:50,spd:45,lck:25,def:20,res:5,gTotal:270},'red',2),
 
@@ -392,9 +473,9 @@ U('Artur','Monk','light',       {bTotal:30,hp:19,str:6,skl:6,spd:8,lck:2,def:2,r
 U('Riev','Monk','light',        {bTotal:36,hp:21,str:8,skl:7,spd:6,lck:3,def:4,res:8,con:8},    {hp:65,str:45,skl:35,spd:30,lck:20,def:25,res:60,gTotal:280},'purple'),
 U('Saul','Monk','light',        {bTotal:28,hp:20,str:5,skl:6,spd:7,lck:2,def:2,res:6,con:6},    {hp:60,str:40,skl:45,spd:45,lck:15,def:15,res:50,gTotal:270},'green'),
 
-U('Canas','Shaman','dark',      {bTotal:47,hp:21,str:10,skl:9,spd:8,lck:7,def:5,res:8,con:7},   {hp:70,str:45,skl:40,spd:35,lck:25,def:25,res:45,gTotal:285},'purple'),
-U('Raigh','Shaman','dark',      {bTotal:51,hp:23,str:12,skl:9,spd:9,lck:6,def:5,res:10,con:4},  {hp:55,str:45,skl:55,spd:40,lck:15,def:15,res:20,gTotal:245},'purple'),
-U('Knoll','Shaman','dark',      {bTotal:28,hp:18,str:7,skl:6,spd:6,lck:0,def:2,res:7,con:7},    {hp:70,str:50,skl:40,spd:35,lck:20,def:10,res:45,gTotal:270},'blue'),
+U('Canas','Shaman','dark',      {bTotal:37,hp:21,str:8,skl:7,spd:7,lck:6,def:4,res:5,con:7},   {hp:70,str:45,skl:40,spd:35,lck:25,def:25,res:45,gTotal:285},'purple'),
+U('Raigh','Shaman','dark',      {bTotal:41,hp:23,str:9,skl:5,spd:7,lck:6,def:5,res:9,con:4},    {hp:55,str:45,skl:55,spd:40,lck:15,def:15,res:20,gTotal:245},'purple'),
+U('Knoll','Shaman','dark',      {bTotal:29,hp:18,str:8,skl:6,spd:6,lck:0,def:2,res:7,con:7},    {hp:70,str:50,skl:40,spd:35,lck:20,def:10,res:45,gTotal:270},'blue'),
 U('Sophia','Shaman','dark',     {bTotal:24,hp:15,str:6,skl:2,spd:4,lck:3,def:1,res:8,con:3},    {hp:60,str:55,skl:40,spd:30,lck:20,def:20,res:55,gTotal:280},'blue'),
 U('Lyon','Shaman','dark',       {bTotal:35,hp:20,str:8,skl:7,spd:5,lck:3,def:4,res:8,con:8},    {hp:70,str:55,skl:45,spd:25,lck:25,def:25,res:55,gTotal:300},'purple'),
 U('Niime','Shaman','dark',      {bTotal:42,hp:20,str:9,skl:9,spd:7,lck:3,def:4,res:10,con:6},   {hp:55,str:30,skl:45,spd:25,lck:15,def:15,res:45,gTotal:230},'purple',4),
