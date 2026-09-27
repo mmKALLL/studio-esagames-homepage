@@ -1,0 +1,1 @@
+{"animations":{"fly":{"delay":3,"frames":[{"x":0,"y":0,"w":16,"h":17,"delay":3,"reg":{"x":8,"y":8}}]},"land":{"delay":1,"frames":[{"x":0,"y":17,"w":16,"h":17,"delay":1,"reg":{"x":8,"y":8}},{"x":16,"y":17,"w":16,"h":17,"delay":1,"reg":{"x":8,"y":8}}]}}}
