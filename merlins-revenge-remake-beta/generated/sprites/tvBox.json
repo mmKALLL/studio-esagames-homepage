@@ -1,0 +1,1 @@
+{"animations":{"grave":{"delay":3,"frames":[{"x":0,"y":0,"w":50,"h":31,"delay":3,"reg":{"x":28,"y":14}},{"x":50,"y":0,"w":50,"h":31,"delay":3,"reg":{"x":28,"y":14}}]},"stand":{"delay":3,"frames":[{"x":0,"y":31,"w":50,"h":36,"delay":3,"reg":{"x":28,"y":18}}]}}}

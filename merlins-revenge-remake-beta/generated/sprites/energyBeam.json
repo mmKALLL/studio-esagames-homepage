@@ -1,0 +1,1 @@
+{"animations":{"explode":{"delay":1,"frames":[{"x":0,"y":0,"w":2,"h":2,"delay":1,"reg":{"x":1,"y":1}},{"x":2,"y":0,"w":2,"h":2,"delay":1,"reg":{"x":1,"y":1}}]},"fly":{"delay":3,"frames":[{"x":0,"y":2,"w":1,"h":2,"delay":3,"reg":{"x":1,"y":1}}]},"stand":{"delay":3,"frames":[{"x":0,"y":4,"w":2,"h":2,"delay":3,"reg":{"x":0,"y":1}}]}}}
